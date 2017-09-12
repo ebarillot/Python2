@@ -6,23 +6,22 @@
 #
 
 from __future__ import unicode_literals, print_function
-from typing import Union, List, Iterable
 
+import logging
 import os
 import re
-import logging
-
-from EBCommons.paths_and_files import filter_files_with_patterns_and_extensions
-from EBCommons.prog_helper import log_init, log_exit, log_write, get_fun_ref
 
 from openpyxl import Workbook as ExcelWorkbook
+from openpyxl.styles import Alignment
 from openpyxl.styles import Font, Border, Side
 from openpyxl.styles.named_styles import NamedStyle
-from openpyxl.styles import Alignment
 from openpyxl.utils import get_column_letter
+from typing import List, Iterable
+
+from EBCommons.paths_and_files import filter_files_with_patterns_and_extensions
+from EBCommons.prog_helper import log_init, log_exit, log_write, get_fun_ref, LocalError
 
 __author__ = 'Emmanuel Barillot'
-
 
 # constantes
 # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
@@ -34,49 +33,98 @@ DEFAULT_LOG_ENCODING = r'iso-8859-15'
 class CompteurOne(object):
     def __init__(self, num, name, value):
         # type: (int, unicode, int) -> None
-        self.num = num
-        self.name = name    # type: unicode
-        self.value = value
+        self._num = num
+        self._name = name  # type: unicode
+        self._value = value
+
+    def num(self):
+        return self._num
+
+    def name(self):
+        return self._name
+
+    def value(self):
+        return self._value
 
     def to_tuple(self):
-        return self.num, self.name, self.value
+        return self._num, self._name, self._value
 
     def __unicode__(self):
+        # type: () -> unicode
         # comme on travaille en unicode dans ce module, c'est cette fonction qu'il faut surcharger
-        #  la fonction str() fonctionne par defaut en ascii (sys.getdefaultencoding())
-
-        # return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(map(lambda x: x.encode('utf8') if isinstance(x,
-        # unicode) else x, self.to_tuple())) return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(self.num, self.name,
-        # self.value)
         return "[{0[0]:>2}] {0[1]:60.60s}: {0[2]:>9}".format(self.to_tuple())
-        # return "[{}] {:60.60s}: {:>9}".format(self.num, self.name, self.value)
-        # return "[{}] {}: {}".format(self.num, self.name, self.value)
 
     def __str__(self):
-        # on ne gere pas l'ascii dans ce module
-        pass
+        # type: () -> unicode
+        #  la fonction str() fonctionne par defaut en ascii (sys.getdefaultencoding())
+        return self.__unicode__()
+
+    def to_str(self):
+        # type: () -> unicode
+        return self.__unicode__()
 
 
 class CompteursFichier(object):
     def __init__(self, fichier, compteurs=None):
         # type: (unicode, Iterable[CompteurOne]) -> None
-        self.fichier = fichier
-        self.cpts = list(compteurs) if compteurs else list()    # type: List[CompteurOne]
+        self._fichier = fichier
+        self._compteurs = list(compteurs) if compteurs else list()  # type: List[CompteurOne]
+
+    def fichier(self):
+        # type: () -> unicode
+        return os.path.basename(self._fichier)
+
+    def compteurs(self):
+        # type: () -> Iterable[CompteurOne]
+        return self._compteurs
 
     def add(self, compteur_one):
         # type: (CompteurOne) -> List[CompteurOne]
-        self.cpts.append(compteur_one)
-        return self.cpts
-
-    def get_fichier(self):
-        return self.fichier
+        self._compteurs.append(compteur_one)
+        return self._compteurs
 
     def print_compteurs(self):
+        # type: () -> None
         """affichage des compteurs"""
-        log_write("Compteurs du fichier {}:".format(self.fichier.encode('utf8')), level=logging.DEBUG)
-        # for i in range(1, len(self.cpt)):
-        for cpt in self.cpts:
-            log_write(unicode(cpt), level=logging.DEBUG)
+        log_write("Compteurs du fichier {}:".format(self._fichier.encode('utf8')), level=logging.DEBUG)
+        for cpt in self._compteurs:
+            log_write(cpt.__str__(), level=logging.DEBUG)
+
+    def get_compteurs_as_dict(self):
+        # type: () -> dict
+        """
+        :return: dictionnaire des compteurs du fichier
+        """
+        # compteurs_dict = dict()
+        # for compteur in self._compteurs:
+        #     compteur_name = compteur.name()
+        #     compteurs_dict[compteur_name] = compteur.value()
+        compteurs_dict = dict([(compteur.name(), compteur.value()) for compteur in self._compteurs])
+        return compteurs_dict
+
+    @classmethod
+    def normalize(cls, compteursFichier_list_in):
+        # type: (Iterable[CompteursFichier]) -> Iterable[CompteursFichier]
+        """
+        Normalise les séries de compteurs associés à un ensemble de fichiers
+        Tous les fichiers auront artificiellement une valeur (éventuellement 0)
+        pour l'ensemble des compteurs présents dans tous les fichiers.
+        :param compteursFichier_list_in: collection de CompteursFichier
+        :return: une collection de CompteursFichier normalisée
+        """
+        compteur_name_set = set([compteur.name() for compteurs_fichier in compteursFichier_list_in
+                                 for compteur in compteurs_fichier.compteurs()])
+        compteursFichier_list_out = list()
+        for compteurs_fichier in compteursFichier_list_in:
+            compteurs_normalises_list = list()
+            compteurs_as_dict = compteurs_fichier.get_compteurs_as_dict()
+            compteur_num = -1
+            for compteur_name in compteur_name_set:
+                compteur_num += 1
+                compteur_value = compteurs_as_dict[compteur_name] if compteur_name in compteurs_as_dict.keys() else 0
+                compteurs_normalises_list += [CompteurOne(compteur_num, compteur_name, compteur_value)]
+            compteursFichier_list_out += [CompteursFichier(compteurs_fichier.fichier(), compteurs_normalises_list)]
+        return compteursFichier_list_out
 
 
 def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
@@ -90,6 +138,7 @@ def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
     :param encoding: encodage du fichier à lire
     :return: un tuple des compteurs trouvés
     """
+
     def parse_nb_compteurs(the_line):
         # type: (unicode) -> int or None
         # re_nb_compteurs = re.compile(".*LOG\|\[(.*)\] Compteurs")
@@ -117,11 +166,11 @@ def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
         #   le motif de la ligne qui contient le nb de compteurs
         #   ou le motif d'une ligne qui contient un compteur
         for line in f:
-            line_decoded = line.decode(encoding)    # decodage de la ligne vers utf-8
+            line_decoded = line.decode(encoding)  # decodage de la ligne vers utf-8
             # la ligne du nb de compteurs
             nb_compteurs = parse_nb_compteurs(line_decoded)
             if nb_compteurs:
-                log_write(the_file_name + ", nb compteurs trouvés: " + unicode(nb_compteurs))
+                log_write(the_file_name + ", nb compteurs trouvés: " + str(nb_compteurs))
             # les compteurs
             compteur = parse_compteur(line_decoded)
             if compteur is not None:
@@ -144,7 +193,7 @@ def call_read_prg_log(dir_name, file_name):
         cpts.print_compteurs()
         return True
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
         return False
 
 
@@ -170,19 +219,19 @@ def call_read_prg_log_many(dir_name, re_file_name):
     :return: bool
     """
     try:
-        file_name_list =\
+        file_name_list = \
             filter_files_with_patterns_and_extensions(os.listdir(dir_name), include_patterns=(re_file_name,))
         cpt_list = read_prg_log_many(dir_name, file_name_list, DEFAULT_LOG_ENCODING)
         for cpt in cpt_list:
             cpt.print_compteurs()
         return True
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
         return False
 
 
 def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_fichiers_list=None):
-    # type: (unicode, Union[CompteursFichier, None], Union[List[CompteursFichier], None]) -> None
+    # type: (unicode, CompteursFichier, Iterable[CompteursFichier]) -> None
     """
     Crée un fichier Excel à partir des compteurs d'un ou de plusieurs fichiers.
 
@@ -191,6 +240,7 @@ def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_
     :param compteurs_fichiers_list: une liste compteurs de fichiers
     :return: None
     """
+
     def add_title_style(wb):
         # creation d'un style personnel nommé, de façon à l'affecter à une ligne ou une colonne entière
         title_style = NamedStyle(name="title_style")
@@ -213,22 +263,21 @@ def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_
         raise Exception('Give either a row or a collection')
     if compteurs_fichier is not None and compteurs_fichiers_list is not None:
         raise Exception('Give either a row or a collection, not both')
-    if compteurs_fichier is not None:
-        compteurs_list = [compteurs_fichier]
-    else:
-        compteurs_list = compteurs_fichiers_list
+
+    compteurs_list = [compteurs_fichier] if compteurs_fichier is not None \
+        else CompteursFichier.normalize(compteurs_fichiers_list)  # type: Iterable[CompteursFichier]
 
     # ajout des en-têtes, à partir des libellés de la premiere ligne
-    crow = compteurs_list[0]
-    title_line = ['fichier'] + [crow[i][1] for i in range(1, len(crow))]
-
+    # ça suffit car les compteurs ont été normalisés
+    title_line = ['fichier'] + [compteur.name() for compteur in compteurs_list[0].compteurs()]
     feuil1.append(title_line)
 
-    for i in range(len(compteurs_list)):
-        # ajout des valeurs dans les lignes suivantes
-        crow = compteurs_list[i]
-        next_line = [crow[0].split('/')[-1]] + [int(crow[i][2]) for i in range(1, len(crow))]
+    # ajout des valeurs dans les lignes suivantes
+    for compteurs_fichier in compteurs_list:
+        next_line = [compteurs_fichier.fichier()] + [compteur.value() for compteur in compteurs_fichier.compteurs()]
         feuil1.append(next_line)
+
+    # map(lambda x: feuil1.append([x.fichier()] + [compteur.value() for compteur in x.compteurs()]), compteurs_list)
 
     # ajustement éventuel de la largeur de chaque colonne
     for i in range(feuil1.max_column):
@@ -247,7 +296,7 @@ def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_
     try:
         workbook.save(excel_file_full_name)
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
 
 
 def call_excel_write_log_cpt(dir_name, excel_file_name):
@@ -257,37 +306,37 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
         compteurs = CompteursFichier(
             'fichier_1'
             , [CompteurOne(0, 'cpt1', 12)
-            ,  CompteurOne(1, 'cpt2', 11)
-            ,  CompteurOne(2, 'cpt3', 9)
-            ,  CompteurOne(3, 'cpt4', 8)]
+                , CompteurOne(1, 'cpt2', 11)
+                , CompteurOne(2, 'cpt3', 9)
+                , CompteurOne(3, 'cpt4', 8)]
         )
         compteurs_coll = [CompteursFichier('fichier_1'
                                            , map(lambda x: CompteurOne(*x)
                                                  , [
-                                                       (' 0', 'cpt1', 12)
+                                                     (' 0', 'cpt1', 12)
                                                      , (' 1', 'cpt2', 11)
                                                      , (' 2', 'cpt3', 9)
                                                      , (' 3', 'cpt4', 8)
-                                                    ]
+                                                 ]
                                                  )
                                            )
-                            , CompteursFichier('fichier_2'
-                                               , map(lambda x: CompteurOne(*x)
-                                                     , [
-                                                           (' 0', 'cpt1', 13)
-                                                         , (' 1', 'cpt2', 15)
-                                                         , (' 2', 'cpt3', 6)
-                                                         , (' 3', 'cpt4', 7)
-                                                     ]
-                                                   )
-                                               )
+            , CompteursFichier('fichier_2'
+                               , map(lambda x: CompteurOne(*x)
+                                     , [
+                                         (' 0', 'cpt1', 13)
+                                         , (' 1', 'cpt2', 15)
+                                         , (' 2', 'cpt3', 6)
+                                         , (' 3', 'cpt4', 7)
+                                     ]
+                                     )
+                               )
                           ]
 
         # excel_write_log_cpt(file_name, compteurs_row=compteurs)
         excel_write_log_cpt(file_name, compteurs_fichiers_list=compteurs_coll)
         return True
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
         return False
 
 
@@ -308,7 +357,7 @@ def call_read_prg_log_to_excel(dir_name, file_name, excel_file_name):
         excel_write_log_cpt(the_excel_file_name, compteurs_fichier=cpts)
         return True
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
         return False
 
 
@@ -336,7 +385,7 @@ def call_read_prg_log_to_excel_many(path_src, file_name_re, encoding_src, path_d
             excel_write_log_cpt(os.path.join(path_dest, excel_file_name), compteurs_fichiers_list=cpt_list)
         return True
     except Exception as e:
-        log_write(unicode(e), level=logging.ERROR)
+        log_write(LocalError(e).__str__(), level=logging.ERROR)
         raise
         # return False
 
@@ -358,7 +407,7 @@ def launch(path_src, log_file_name, encoding_src, path_dest, excel_file_name):
     """
     # liste de fonctions à tester
     dict_of_funs_to_test = {
-          r'call_read_prg_log': (path_src, log_file_name)
+        r'call_read_prg_log': (path_src, log_file_name)
         , r'call_excel_write_log_cpt': (path_src, excel_file_name)
         , r'call_read_prg_log_to_excel': (path_src, log_file_name, path_dest, excel_file_name)
         , r'call_read_prg_log_many': (path_src, PATTERN_INGNEGS_LOG)

@@ -18,6 +18,11 @@ from typing import Any
 __author__ = 'Emmanuel Barillot'
 
 
+def _who_call_me():
+    frame, filename, line_number, function_name, lines, index = inspect.stack()[2]
+    return filename, line_number, function_name
+
+
 def force_to_unicode(text):
     """If text is unicode, it is returned as is. If it's str, convert it to Unicode using UTF-8 encoding"""
     return text if isinstance(text, unicode) else text.decode('utf8')
@@ -29,7 +34,7 @@ class LocalError(Exception):
     Elle dérive de Exception
     """
 
-    def __init__(self, exception, keyerr):
+    def __init__(self, exception, keyerr=None):
         # type: (Exception, unicode) -> None
         """
         Constructeur
@@ -39,12 +44,11 @@ class LocalError(Exception):
         :return: None
         """
         self.exception = exception
-        self.keyerr = keyerr
+        self.keyerr = keyerr if keyerr else _who_call_me()[2]
 
     def __unicode__(self):
         # type: () -> unicode
-        return "keyerr: " + self.keyerr + ":" + unicode(self.exception) if '2' == sys.version[:1] else str(
-            self.exception)
+        return self.keyerr + ":" + str(self.exception)
 
     def __str__(self):
         # type: () -> unicode
@@ -86,7 +90,6 @@ DEFAULT_LOG_FORMAT = "[%(asctime)s:%(levelname)-5s] %(message)s"
 DEFAULT_LOG_LEVEL = logging.INFO
 
 
-# TODO créer une classe Logger(Logging) ?
 def log_init(logger_name='root', level=DEFAULT_LOG_LEVEL):
     # type: (unicode) -> logging.Logger
     """
@@ -100,8 +103,7 @@ def log_init(logger_name='root', level=DEFAULT_LOG_LEVEL):
     logger = logging.getLogger(logger_name)
     logging.basicConfig(format=DEFAULT_LOG_FORMAT, level=level)
     logging.info('====================')
-    logging.info(
-        'BEGIN: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
+    logging.info('BEGIN: ' + str(datetime.datetime.today()))
     logging.info('plateforme = ' + sys.version)
     logging.info('sys.path   = ')
     for p in sys.path:
@@ -121,14 +123,18 @@ def log_exit():
     :return: None
     """
     logging.info('====================')
-    logging.info(
-        'END: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
+    logging.info('END: ' + str(datetime.datetime.today()))
     logging.info('====================')
 
 
-# retourne une reference sur la fonction du module courant à partir de son nom
 def get_fun_ref(fun_name, module_name=__name__):
     # type: (unicode) -> Any
+    """
+    Retourne une reference sur la fonction du module courant à partir de son nom
+    :param fun_name: nom de la fonction dotn on cherche la référence
+    :param module_name: le nom du module ù se trouve la fonction
+    :return: référence vers une fonction
+    """
     this = sys.modules[module_name]  # les modules de l'espace de nommage courant
     # attrs = dir(this) # tous les symboles connus dans sys.modules[__name__]
     fn = getattr(this, fun_name)
@@ -144,13 +150,15 @@ logging_fun = {
 }
 
 
-def log_write(s="", level=logging.INFO):
+def log_write(s=u"", level=logging.INFO):
     # type: (unicode) -> None
     """
     Ecriture d'une ligne de logging
     :param s: une ligne à écrire
+    :param level: niveau de gravité
     :return: None
     """
     # recupere les infos de l'appelant
-    frame, filename, line_number, function_name, lines, index = inspect.stack()[1]
+    # frame, filename, line_number, function_name, lines, index = inspect.stack()[1]
+    filename, line_number, function_name = _who_call_me()
     logging_fun[level]("[{}:{}:{}] {}".format(basename(filename), line_number, function_name, s))

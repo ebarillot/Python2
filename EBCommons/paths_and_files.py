@@ -12,7 +12,19 @@ __author__ = 'Emmanuel Barillot'
 
 def mkdir_path(path_to_create):
     # type: (unicode) -> None
+    """
+    Crée un répertoire et tous les répertoire intermédiaires qui manquent.
+    Fonctionne sous Windows et sous Linux.
+    :param path_to_create: le chemin à créer
+    :return: None
+    """
     def mkp(p):
+        # type: (unicode) -> None
+        """
+        Fonction appelée récursivement pour créer les répertoire intermédiaires qui manquent
+        :param p: chemin dont on contrôle l'existence avant de le créer
+        :return: None
+        """
         if p is not None and not os.path.isdir(p):
             mkp(os.path.split(p)[0])
             os.mkdir(p)

@@ -6,7 +6,7 @@
 #
 
 from __future__ import unicode_literals, print_function
-from typing import Union, List, Tuple, Any, Sequence, Iterable
+from typing import Union, List, Iterable
 
 import os
 import re
@@ -45,8 +45,9 @@ class CompteurOne(object):
         # comme on travaille en unicode dans ce module, c'est cette fonction qu'il faut surcharger
         #  la fonction str() fonctionne par defaut en ascii (sys.getdefaultencoding())
 
-        # return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(map(lambda x: x.encode('utf8') if isinstance(x,unicode) else x, self.to_tuple()))
-        # return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(self.num, self.name, self.value)
+        # return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(map(lambda x: x.encode('utf8') if isinstance(x,
+        # unicode) else x, self.to_tuple())) return "[{0[0]}] {0[1]:60.60s}: {0[2]:>9}".format(self.num, self.name,
+        # self.value)
         return "[{0[0]:>2}] {0[1]:60.60s}: {0[2]:>9}".format(self.to_tuple())
         # return "[{}] {:60.60s}: {:>9}".format(self.num, self.name, self.value)
         # return "[{}] {}: {}".format(self.num, self.name, self.value)
@@ -60,7 +61,7 @@ class CompteursFichier(object):
     def __init__(self, fichier, compteurs=None):
         # type: (unicode, Iterable[CompteurOne]) -> None
         self.fichier = fichier
-        self.cpts = list(compteurs) if compteurs else list() # type: List[CompteurOne]
+        self.cpts = list(compteurs) if compteurs else list()    # type: List[CompteurOne]
 
     def add(self, compteur_one):
         # type: (CompteurOne) -> List[CompteurOne]

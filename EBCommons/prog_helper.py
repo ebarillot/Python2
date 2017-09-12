@@ -5,18 +5,21 @@
 # - gestion d'erreur, stack du prog en cas de plantage
 #
 from __future__ import unicode_literals, print_function
-from typing import Union, Any
+
 import datetime
-import sys
-import logging
 import inspect
+import logging
+import sys
 from os.path import basename
+
+import cx_Oracle
+from typing import Any
 
 __author__ = 'Emmanuel Barillot'
 
 
 def force_to_unicode(text):
-    "If text is unicode, it is returned as is. If it's str, convert it to Unicode using UTF-8 encoding"
+    """If text is unicode, it is returned as is. If it's str, convert it to Unicode using UTF-8 encoding"""
     return text if isinstance(text, unicode) else text.decode('utf8')
 
 
@@ -25,6 +28,7 @@ class LocalError(Exception):
     Classe qui permet de gérer une erreur personnalisée
     Elle dérive de Exception
     """
+
     def __init__(self, exception, keyerr):
         # type: (Exception, unicode) -> None
         """
@@ -39,10 +43,12 @@ class LocalError(Exception):
 
     def __unicode__(self):
         # type: () -> unicode
-        return "keyerr: " + self.keyerr + ":" + unicode(self.exception) if '2' == sys.version[:1] else str(self.exception)
+        return "keyerr: " + self.keyerr + ":" + unicode(self.exception) if '2' == sys.version[:1] else str(
+            self.exception)
 
     def __str__(self):
-        pass
+        # type: () -> unicode
+        return self.__unicode__()
 
 
 def call_stack():
@@ -69,7 +75,7 @@ def mngt_error(error):
     :param error: objet erreur à traiter
     :return: rien
     """
-    logging.error('Stack frame: '+call_stack())
+    logging.error('Stack frame: ' + call_stack())
     if isinstance(error, cx_Oracle.DatabaseError):
         logging.error('DatabaseError: {}'.format(error))
     else:
@@ -94,11 +100,12 @@ def log_init(logger_name='root', level=DEFAULT_LOG_LEVEL):
     logger = logging.getLogger(logger_name)
     logging.basicConfig(format=DEFAULT_LOG_FORMAT, level=level)
     logging.info('====================')
-    logging.info('BEGIN: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
+    logging.info(
+        'BEGIN: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
     logging.info('plateforme = ' + sys.version)
     logging.info('sys.path   = ')
     for p in sys.path:
-        logging.info('    '+p)
+        logging.info('    ' + p)
     logging.info('====================')
     logging.info('Default encoding for str(): ' + sys.getdefaultencoding())
     logging.info('filesystem encoding: ' + sys.getfilesystemencoding())
@@ -114,7 +121,8 @@ def log_exit():
     :return: None
     """
     logging.info('====================')
-    logging.info('END: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
+    logging.info(
+        'END: ' + unicode(datetime.datetime.today()) if '2' == sys.version[:1] else str(datetime.datetime.today()))
     logging.info('====================')
 
 
@@ -127,6 +135,15 @@ def get_fun_ref(fun_name, module_name=__name__):
     return fn
 
 
+# catalogue des fonctions de logging
+logging_fun = {
+    logging.INFO: logging.info
+    , logging.WARNING: logging.warning
+    , logging.ERROR: logging.error
+    , logging.DEBUG: logging.debug
+}
+
+
 def log_write(s="", level=logging.INFO):
     # type: (unicode) -> None
     """
@@ -134,13 +151,6 @@ def log_write(s="", level=logging.INFO):
     :param s: une ligne à écrire
     :return: None
     """
-
-    logging_fun = {
-          logging.INFO: logging.info
-        , logging.WARNING: logging.warning
-        , logging.ERROR: logging.error
-        , logging.DEBUG: logging.debug
-    }
     # recupere les infos de l'appelant
     frame, filename, line_number, function_name, lines, index = inspect.stack()[1]
     logging_fun[level]("[{}:{}:{}] {}".format(basename(filename), line_number, function_name, s))

@@ -5,21 +5,20 @@
 #
 #
 
-from __future__ import unicode_literals, print_function
+from __future__ import print_function, unicode_literals
 
 import logging
 import os
 import re
 
 from openpyxl import Workbook as ExcelWorkbook
-from openpyxl.styles import Alignment
-from openpyxl.styles import Font, Border, Side
+from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.styles.named_styles import NamedStyle
 from openpyxl.utils import get_column_letter
-from typing import List, Iterable
+from typing import Iterable, List
 
 from EBCommons.paths_and_files import filter_files_with_patterns_and_extensions
-from EBCommons.prog_helper import log_init, log_exit, log_write, get_fun_ref, LocalError
+from EBCommons.prog_helper import LocalError, get_fun_ref, log_exit, log_init, log_write
 
 __author__ = 'Emmanuel Barillot'
 
@@ -103,19 +102,19 @@ class CompteursFichier(object):
         return compteurs_dict
 
     @classmethod
-    def normalize(cls, compteursFichier_list_in):
+    def normalize(cls, compteurs_fichier_list_in):
         # type: (Iterable[CompteursFichier]) -> Iterable[CompteursFichier]
         """
         Normalise les séries de compteurs associés à un ensemble de fichiers
         Tous les fichiers auront artificiellement une valeur (éventuellement 0)
         pour l'ensemble des compteurs présents dans tous les fichiers.
-        :param compteursFichier_list_in: collection de CompteursFichier
+        :param compteurs_fichier_list_in: collection de CompteursFichier
         :return: une collection de CompteursFichier normalisée
         """
-        compteur_name_set = set([compteur.name() for compteurs_fichier in compteursFichier_list_in
+        compteur_name_set = set([compteur.name() for compteurs_fichier in compteurs_fichier_list_in
                                  for compteur in compteurs_fichier.compteurs()])
-        compteursFichier_list_out = list()
-        for compteurs_fichier in compteursFichier_list_in:
+        compteurs_fichier_list_out = list()
+        for compteurs_fichier in compteurs_fichier_list_in:
             compteurs_normalises_list = list()
             compteurs_as_dict = compteurs_fichier.get_compteurs_as_dict()
             compteur_num = -1
@@ -123,8 +122,13 @@ class CompteursFichier(object):
                 compteur_num += 1
                 compteur_value = compteurs_as_dict[compteur_name] if compteur_name in compteurs_as_dict.keys() else 0
                 compteurs_normalises_list += [CompteurOne(compteur_num, compteur_name, compteur_value)]
-            compteursFichier_list_out += [CompteursFichier(compteurs_fichier.fichier(), compteurs_normalises_list)]
-        return compteursFichier_list_out
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(), compteurs_normalises_list)]
+        return compteurs_fichier_list_out
+
+    @classmethod
+    def to_json(cls, compteurs_fichier_list_in):
+        # type: (Iterable[CompteursFichier]) -> Iterable[CompteursFichier]
+        pass
 
 
 def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
@@ -303,13 +307,13 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
     # type: (unicode, unicode) -> bool
     try:
         file_name = os.path.join(dir_name, excel_file_name)
-        compteurs = CompteursFichier(
-            'fichier_1'
-            , [CompteurOne(0, 'cpt1', 12)
-                , CompteurOne(1, 'cpt2', 11)
-                , CompteurOne(2, 'cpt3', 9)
-                , CompteurOne(3, 'cpt4', 8)]
-        )
+        # compteurs = CompteursFichier(
+        #     'fichier_1'
+        #     , [CompteurOne(0, 'cpt1', 12)
+        #         , CompteurOne(1, 'cpt2', 11)
+        #         , CompteurOne(2, 'cpt3', 9)
+        #         , CompteurOne(3, 'cpt4', 8)]
+        #     )
         compteurs_coll = [CompteursFichier('fichier_1'
                                            , map(lambda x: CompteurOne(*x)
                                                  , [
@@ -317,7 +321,7 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
                                                      , (' 1', 'cpt2', 11)
                                                      , (' 2', 'cpt3', 9)
                                                      , (' 3', 'cpt4', 8)
-                                                 ]
+                                                     ]
                                                  )
                                            )
             , CompteursFichier('fichier_2'
@@ -327,7 +331,7 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
                                          , (' 1', 'cpt2', 15)
                                          , (' 2', 'cpt3', 6)
                                          , (' 3', 'cpt4', 7)
-                                     ]
+                                         ]
                                      )
                                )
                           ]
@@ -412,7 +416,7 @@ def launch(path_src, log_file_name, encoding_src, path_dest, excel_file_name):
         , r'call_read_prg_log_to_excel': (path_src, log_file_name, path_dest, excel_file_name)
         , r'call_read_prg_log_many': (path_src, PATTERN_INGNEGS_LOG)
         , r'call_read_prg_log_to_excel_many': (path_src, PATTERN_INGNEGS_LOG, encoding_src, path_dest, excel_file_name)
-    }
+        }
 
     # liste des références des fonctions
     funs_available = map(lambda x: get_fun_ref(x, __name__), dict_of_funs_to_test.keys())

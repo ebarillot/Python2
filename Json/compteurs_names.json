@@ -1,0 +1,47 @@
+{
+  "compteurs autorisés"     : {
+    "Lignes fichier"                         : 1,
+    "Fichier en entrée"                      : 2,
+    "Rejets"                                 : 3,
+    "CXE stockés avant traitement du fichier": 4,
+    "Sirens traités fichier + table"         : 5,
+    "Aucune action"                          : 6,
+    "Sortants SOLD"                          : 7,
+    "Entrants CXE"                           : 8,
+    "Remplacements CXE existants SOLD+CXE"   : 9,
+    "Cumul entrants+remplacés"               : 10,
+    "CA > 50 000 000 €"                      : 11,
+    "FJU hors perimetre"                     : 12,
+    "Total siren traités"                    : 13,
+    "CXE stockés après traitement du fichier": 14,
+    "Variation du nb de CXE stockés"         : 15,
+    "% de variation du nb de CXE stockés"    : 16
+  },
+  "compteurs correspondances": {
+    "Lignes fichier"                                            : "Lignes fichier",
+    "Lignes bdd comptées"                                       : "CXE stockés avant traitement du fichier",
+    "Après dedoublonnage, sirens distincts"                     : "Sirens traités fichier + table",
+    "Après fusion Cas 1: fichier == base  , aucune action"      : "Aucune action",
+    "Après Fusion Cas 2: rien dans fichier, +SOLD en base"      : "Sortants SOLD",
+    "Après Fusion Cas 2: rien dans fichier, aucune action (mode": "Aucune action",
+    "Après Fusion Cas 3: rien en base     , +CXE en base"       : "Entrants CXE",
+    "Après Fusion Cas 4: fichier <> base  , +SOLD+CXE en base"  : "Remplacements CXE existants SOLD+CXE",
+    "Après Fusion total sirens traités"                         : "",
+    "CA lus dans chiffres clés"                                 : "",
+    "CA > seuil"                                                : "CA > 50 000 000 €",
+    "FJU lues en bdd"                                           : "",
+    "FJU dans le perimetre"                                     : "",
+    "FJU hors perimetre"                                        : "FJU hors perimetre",
+    "SIREN dans le perimetre"                                   : "",
+    "SIREN hors perimetre"                                      : "",
+    "Après insert Cas 1: fichier == base  , aucune action"      : "",
+    "Après insert Cas 2: rien dans fichier, +SOLD en base"      : "",
+    "Après insert Cas 2: rien dans fichier, aucune action (mode": "",
+    "Après insert Cas 3: rien en base     , +CXE en base"       : "",
+    "Après insert Cas 4: fichier <> base  , +SOLD+CXE en base"  : "",
+    "Après insert, total sirens traités"                        : "Total siren traités",
+    "Sirens du fichier rejetés"                                 : "Rejets",
+    "Après insert total en base"                                : "CXE stockés après traitement du fichier"
+  }
+}
+

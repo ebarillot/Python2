@@ -15,7 +15,7 @@ from openpyxl import Workbook as ExcelWorkbook
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.styles.named_styles import NamedStyle
 from openpyxl.utils import get_column_letter
-from typing import Iterable, List, Union, Dict
+from typing import Iterable, List, Union, Dict, Any
 import json
 
 from EBCommons.json_helper import json_navigate
@@ -227,9 +227,11 @@ class CompteursCorrespondance(object):
     des compteurs tout en gérant l'évolution des noms de compteurs au fil des évolutions des programmes de chargement.
     """
     __slots__ = ['_corresp']
+    # constantes pour la classe
+    _compteurs_normalises_key = 'compteurs normalisés'
 
     def __init__(self, json_obj):
-        # type: (Dict) -> CompteursCorrespondance
+        # type: (Dict[Any]) -> CompteursCorrespondance
         self._corresp = json_obj
 
     @classmethod
@@ -243,7 +245,23 @@ class CompteursCorrespondance(object):
         """
         with open(file_name) as f:
             json_obj = json.load(f)
+        cls._valid_json(json_obj)
         return cls(json_obj=json_obj)  # appelle __init__()
+
+    @classmethod
+    def _valid_json(cls, corresp_json):
+        # type: (Dict[Any]) -> None
+        """
+        Valide le json qui contient les correspondances:
+        chaque compteur qui apparait dans une correspondance doit exister dans le dictionnaire des compteurs normalisés.
+        :return: None
+        """
+        compteurs_normalises = corresp_json[cls._compteurs_normalises_key].keys()
+        for corresp_key in corresp_json.keys():
+            if corresp_key != cls._compteurs_normalises_key:
+                for compteur_normalise in corresp_json[corresp_key].values():
+                    if compteur_normalise not in compteurs_normalises:
+                        raise Exception("compteur non référencé dans les compteurs normalisés: {}".format(compteur_normalise))
 
     def _get_corresp_key(self, guess_corresp_key):
         # type: (unicode) -> unicode
@@ -293,7 +311,7 @@ class CompteursCorrespondance(object):
         """
         :return: le dictionnaire des compteurs normalisés et de leur ordre
         """
-        return self._corresp["compteurs normalisés"]
+        return self._corresp[self._compteurs_normalises_key]
 
 
 # TODO: en faire une méthode de CompteursFichier.set_from_file(filename)
@@ -395,6 +413,7 @@ def call_read_prg_log(dir_name, file_name):
         return False
 
 
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
 def read_prg_log_many(path_src_file, file_name_list, encoding=DEFAULT_LOG_ENCODING):
     # type: (unicode, List[unicode], unicode) -> List[CompteursFichier]
     """
@@ -408,6 +427,7 @@ def read_prg_log_many(path_src_file, file_name_list, encoding=DEFAULT_LOG_ENCODI
                [os.path.join(path_src_file, file_name) for file_name in file_name_list])
 
 
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
 def call_read_prg_log_many(dir_name, re_file_name):
     # type: (unicode) -> bool
     """
@@ -429,6 +449,7 @@ def call_read_prg_log_many(dir_name, re_file_name):
         return False
 
 
+# TODO: en faire une méthode de CompteursFichier.to_excel_file(excel_filename)
 def excel_write_log_cpt(excel_file_full_name, corresp_file_name=None, compteurs_fichier=None,
                         compteurs_fichiers_list=None):
     # type: (unicode, unicode or None, CompteursFichier, Iterable[CompteursFichier]) -> None
@@ -570,6 +591,7 @@ def call_read_prg_log_to_excel(dir_name, file_name, excel_file_name):
         return False
 
 
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
 def call_read_prg_log_to_excel_many(path_src, file_name_re, path_dest, excel_file_name,
                                     corresp_file_name, encoding_src=DEFAULT_LOG_ENCODING):
     # type: (unicode, unicode, unicode, unicode, unicode) -> bool

@@ -44,7 +44,8 @@ if True:
 # if False:
     # parsing d'un buffer AVEC utilisation d'un objet_hook dans json.load()
 
-    # Map set of keys to classes
+    # Map set of keys to classes: tous les objets json pointés par les clés suivantes
+    # seront transformées en objet Python par le constructeur qui leur est associé dans le mapping_sugnature
     json_keys_to_CompteursGroup = {u"compteurs autorisés", u"compteurs correspondances"}
     mapping_signature = {frozenset(json_keys_to_CompteursGroup): CompteursGroupClass}
 

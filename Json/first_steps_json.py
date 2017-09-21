@@ -2,8 +2,7 @@
 
 from __future__ import print_function, unicode_literals
 import json
-
-from typing import Any, Dict, Callable, FrozenSet
+from EBCommons.json_helper import DictToObj
 
 __author__ = "Emmanuel Barillot"
 
@@ -41,36 +40,9 @@ class CompteursGroupClass(object):
         return self._groups[group_name] if group_name in self._groups else None
 
 
-class DictToObj(object):
-    '''
-    Objet qui permet de transformer un dict ou plusieurs types de dict en un objet à
-    partir d'un mapping entre un ensemble de clés de dictionnaires et un nom de classe (constructeur en fait)
-    '''
-    def __init__(self, json_keys_mapping):
-        # type: (Dict[FrozenSet[unicode], Callable]) -> DictToObj
-        self._json_keys_mapping = json_keys_mapping
-
-    def dict_to_obj(self, dct):
-        # type: (Dict) -> Any
-        '''
-        Transforme un dict Python en un objet: le constructeur de l'objet est déterminé en fonction
-        de la liste de ses paramètres.
-        :param dct: dictionnaire Python
-        :return: un objet ou un dict inttact si pas de quoi transformer
-        '''
-        if isinstance(dct, dict):
-            for keys, cls in self._json_keys_mapping.items():
-                if keys.issuperset(dct.keys()):
-                    return cls(dct)
-            else:   # le else est bien lié au for et n'est exécuté que si la boucle se termine
-                return dct  # retourne inchangé dans l'arbre json
-                # # Raise exception instead of silently returning None
-                # raise ValueError('Unable to find a matching class for object: {!s}'.format(dct))
-
-
 if True:
 # if False:
-    # parsing d'un buffer avec utilisation d'un objet_hook dans json.load()
+    # parsing d'un buffer AVEC utilisation d'un objet_hook dans json.load()
 
     # Map set of keys to classes
     json_keys_to_CompteursGroup = {u"compteurs autorisés", u"compteurs correspondances"}
@@ -115,16 +87,3 @@ if False:
             for (key, value) in compteurs[d1].get_dict().iteritems():
                 print('  {}: {}'.format(key, value))
 
-
-# code à tester: navigation dans un json
-# from json import load
-# from sys import argv
-# def navigate(obj, path):
-#     if not path:
-#         return obj
-#     head, tail = path[0], path[1:]
-#     return navigate(obj[int(head) if head.isdigit() else head], tail)
-# if __name__ == '__main__':
-#     fname, path = argv[1], argv[2:]
-#     obj = load(open(fname))
-#     print navigate(obj, path)

@@ -1,0 +1,53 @@
+{
+  "compteurs normalisés"     : {
+    "Fichier en entrée"                       : 1,
+    "Rejets"                                  : 2,
+    "Non éligibles"                           : 3,
+    "Stockés avant traitement du fichier"     : 4,
+    "Sirens traités fichier + table"          : 5,
+    "Aucune action"                           : 6,
+    "Sortants"                                : 7,
+    "Date effet mise à jour"                  : 8,
+    "Entrants"                                : 9,
+    "Remplacements existants"                 : 10,
+    "CA > 50 000 000 €"                       : 11,
+    "FJU hors perimetre"                      : 12,
+    "Total siren traités"                     : 13,
+    "Stockés après traitement du fichier"     : 14,
+    "Variation nb lignes en base"             : 15
+  },
+  "chgInfnegs": {
+    "Lignes fichier"                                              : "Fichier en entrée",
+    "Lignes bdd comptées"                                         : "Stockés avant traitement du fichier",
+    "Après dedoublonnage, sirens distincts"                       : "Sirens traités fichier + table",
+    "CA > seuil"                                                  : "CA > 50 000 000 €",
+    "FJU hors perimetre"                                          : "FJU hors perimetre",
+    "Après insert Cas 1: fichier == base  , aucune action"        : "Aucune action",
+    "Après insert Cas 2: rien dans fichier, +SOLD en base"        : "Sortants",
+    "Après insert Cas 2: rien dans fichier, aucune action (mode"  : "Aucune action",
+    "Après insert Cas 3: rien en base     , +CXE en base"         : "Entrants",
+    "Après insert Cas 4: fichier <> base  , +SOLD+CXE en base"    : "Remplacements existants",
+    "Après insert, total sirens traités"                          : "Total siren traités",
+    "Sirens du fichier rejetés"                                   : "Rejets",
+    "Après insert total en base"                                  : "Stockés après traitement du fichier",
+    "Variation du nb de lignes ACT"                               : "Variation nb lignes en base"
+  },
+  "chgInfnegsRemet": {
+    "Lignes fichier"                                              : "Fichier en entrée",
+    "Lignes fichier non éligibles au chargement (sans rejet)"     : "Non éligibles",
+    "Lignes bdd comptées"                                         : "Stockés avant traitement du fichier",
+    "clés distinctes fichier+bdd, après dedoublonnage"            : "Sirens traités fichier + table",
+    "CA > seuil (sans rejet)"                                     : "CA > 50 000 000 €",
+    "FJU hors perimetre (sans rejet)"                             : "FJU hors perimetre",
+    "Insert, Cas 1: fic == bdd       , aucune action"             : "Aucune action",
+    "Insert, Cas 2: rien dans fichier, aucune action (ajout)"     : "Aucune action",
+    "Insert, Cas 2: rien dans fichier, +SOLD/ANN en base"         : "Sortants",
+    "Update, Cas 1B: fichier == base , maj date effet"            : "Date effet mise à jour",
+    "Insert, Cas 3: rien en base     , +CXE/IMP en base"          : "Entrants",
+    "Insert, Cas 4: fichier <> base  , +SOLD+CXE en base"         : "Remplacements existants",
+    "Insert, Total clés traités"                                  : "Total siren traités",
+    "Total clés du fichier rejetés (non qualif + pb)"             : "Rejets",
+    "Après insert total en base"                                  : "Stockés après traitement du fichier",
+    "Variation nb lignes en base"                                 : "Variation nb lignes en base"
+  }
+}

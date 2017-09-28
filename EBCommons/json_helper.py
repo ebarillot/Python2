@@ -42,7 +42,7 @@ class DictToObj(object):
                 return dct  # retourne inchangé dans l'arbre json
 
 
-#  pour un test de la classe DictToObj, voir ../Json/first_steps_json.py
+#  pour un test de la classe DictToObj, voir ../Json/json_1.py
 
 
 def json_navigate(jsobj, jspath):

@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from openpyxl.styles.named_styles import NamedStyle
 import datetime
@@ -43,6 +42,8 @@ ws['A2'] = datetime.datetime.now()
 
 # acces a cell using row and column notation
 d = ws.cell(row=4, column=2, value=10)
+print('d={}'.format(d))
+print('d={}'.format(ws['B4'].value))
 
 # dimensions
 print("ws.max_column: {}".format(ws.max_column))

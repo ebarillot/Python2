@@ -156,7 +156,7 @@ class CompteursFichier(object):
                 compteur_num += 1
                 compteur_value = compteurs_as_dict[compteur_name] if compteur_name in compteurs_as_dict.keys() else 0
                 compteurs_normalises_list += [CompteurOne(compteur_num, compteur_name, compteur_value)]
-            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(),
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
                                                             compteurs_fichier.remettant(),
                                                             compteurs_normalises_list,
                                                             compteurs_fichier.date_run())]
@@ -179,7 +179,7 @@ class CompteursFichier(object):
         compteurs_fichier_list_out = list()
         corresp_compteurs_norm = corresp.get_compteurs_norm()
         for compteurs_fichier in compteurs_fichier_list_in:
-            corresp_for_this_fichier = corresp.get_corresp_by_key(compteurs_fichier.fichier())
+            corresp_for_this_fichier = corresp.get_corresp_by_key(compteurs_fichier.fichier_log())
             compteurs_normalises_dict = dict()
             #  1ere passe pour créer la liste / réceptacle des compteurs normalisés pour un fichier donné
             for compteur_name_norm in corresp_compteurs_norm.keys():
@@ -208,7 +208,7 @@ class CompteursFichier(object):
                                                      compteurs_normalises_dict[cpt]["compteur_value"])
                                          for cpt in compteurs_normalises_dict.keys()]
             compteurs_normalises_list.sort(key=CompteurOne.key)
-            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(),
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
                                                             compteurs_fichier.remettant(),
                                                             compteurs_normalises_list,
                                                             compteurs_fichier.date_run())]

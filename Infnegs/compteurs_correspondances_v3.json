@@ -1,0 +1,46 @@
+{
+  "Version"                               : 3.0,
+  "compteurs"                             :
+  {
+    "Fichier en entrée"                   : {"num": 1, "alias": ["Lignes fichier$"]},
+
+    "Rejets"                              : {"num": 2, "alias": ["Sirens du fichier rejetés",
+                                                                 "Total clés du fichier rejetés"]},
+
+    "Non éligibles"                       : {"num": 3, "alias": ["Lignes fichier non éligibles"]},
+
+    "Stockés avant traitement du fichier" : {"num": 4, "alias": ["Lignes bdd comptées"]},
+
+    "Sirens traités fichier + table"      : {"num": 5, "alias": ["Après dedoublonnage, sirens distincts",
+                                                                 "clés distinctes fichier+bdd, après dedoublonnage"]},
+
+    "Aucune action"                       : {"num": 6, "alias": ["Insert, Cas 1: fic == bdd + filtré , aucune action",
+                                                                 "Insert, Cas 1: fic == bdd       , aucune action",
+                                                                 "Insert, Cas 2: rien dans fichier, aucune action",
+                                                                 "Après insert Cas 1: fichier == base  , aucune action",
+                                                                 "Après insert Cas 2: rien dans fichier, aucune action"]},
+
+    "Sortants"                            : {"num": 7, "alias": ["Après insert Cas 2: rien dans fichier, +SOLD en base",
+                                                                 "Insert, Cas 2: rien dans fichier, +SOLD/ANN en base"]},
+
+    "Date effet mise à jour"              : {"num": 8, "alias": ["Update, Cas 1B: fichier == base , maj date effet"]},
+
+    "Entrants"                            : {"num": 9, "alias": ["Après insert Cas 3: rien en base     , +CXE en base",
+                                                                 "Insert, Cas 3: rien en base     , +CXE/IMP en base"]},
+
+    "Remplacements existants"             : {"num": 10, "alias": ["Après insert Cas 4: fichier <> base  , +SOLD+CXE en base",
+                                                                  "Insert, Cas 4: fichier <> base  , +SOLD+CXE en base"]},
+
+    "CA > 50 000 000 €"                   : {"num": 11, "alias": ["CA > seuil.*"]},
+
+    "FJU hors perimetre"                  : {"num": 12, "alias": ["FJU hors perim.*"]},
+
+    "Total siren traités"                 : {"num": 13, "alias": ["Après insert, total sirens traités",
+                                                                  "Insert, Total clés traités"]},
+
+    "Stockés après traitement du fichier" : {"num": 14, "alias": ["Après insert total en base"]},
+
+    "Variation nb lignes en base"         : {"num": 15, "alias": ["Variation nb lignes en base",
+                                                                  "Variation du nb de lignes ACT"]}
+  }
+}

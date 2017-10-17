@@ -835,9 +835,10 @@ if __name__ == "__main__":
     log_init(level=logging.DEBUG)
     log_write(">>>>>>>>>>>>>>>>>>>> Nouvelle série de tests <<<<<<<<<<<<<<<<<<<<")
 
-    path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
+    # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-09"
+    path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-10"
     path_src = path_root
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"

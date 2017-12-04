@@ -25,28 +25,29 @@ from EBCommons.prog_helper import LocalError, get_fun_ref, log_exit, log_init, l
 __author__ = 'Emmanuel Barillot'
 
 # constantes
+# la table cible dans laquelle les chargements ont été faits: on ne retient que les chargements dans cette table
+TABLE_CIBLE = 'INFNEGS'
 # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
-PATTERN_INGNEGS_LOG = r"chg*.log"
+PATTERN_INGNEGS_LOG = r"chgInf*.log"
 # encoding des fichiers log à analyser, par defaut
 DEFAULT_LOG_ENCODING = r'iso-8859-15'
 
 # Class: Contient les informations d'un compteur
 CompteurOne = NamedTuple(b'CompteurOne', [(b'num', int), (b'name', unicode), (b'value', int)])
 
-CompteursFichierBean = NamedTuple(b'CptFi',
-                                  [(b'fichier', unicode),
-                                   (b'remettant', unicode),
-                                   (b'date_run', unicode),
-                                   (b'compteurs', Dict)])
+# CompteursFichierBean = NamedTuple(b'CptFi',
+#                                   [(b'fichier', unicode),
+#                                    (b'remettant', unicode),
+#                                    (b'date_run', unicode),
+#                                    (b'compteurs', Dict)])
 
 
 # cptfi = CompteursFichierBean(fichier='fic', remettant='INTRUM', date_run='2017/08/01 10:00:00', compteurs=dict())
 
-
 # TODO pour remplacer CompteursFichiers
 # l'idée est d'éviter tout le code inutile
-class CompteursFichierExtended(CompteursFichierBean):
-    pass
+# class CompteursFichierExtended(CompteursFichierBean):
+#     pass
 
 
 class CompteursFichier(object):
@@ -61,22 +62,31 @@ class CompteursFichier(object):
         """
         :return: la liste des valeurs de tous les champs d'un CompteursFichier, y compris la valeur des compteurs
         """
-        return [self.fichier_log,
-                self.fichier_chg,
-                self.remettant,
-                self.date_run] + \
-               [val for key, val in self.compteurs_sorted()]
+        # return [self._fichier_log,
+        #         self._fichier_chg,
+        #         self._remettant,
+        #         self._date_run,
+        #         self._target] + \
+        #        [val for key, val in self.compteurs_sorted()]
+        return [self._remettant,
+                self._date_run,
+                self._target] + \
+               [val for key, val in self.compteurs_sorted()] + \
+               [self._fichier_log, self._fichier_chg]
 
     @property
     def fields_lengths(self):
         """
         :return: la liste des longueurs (en caracteres) des valeurs de tous les champs
         """
-        return [len(self.fichier_log),
-                len(self.fichier_chg),
-                len(self.remettant),
-                len(self.date_run)] + \
-               [len(str(val)) for key, val in self.compteurs_sorted()]
+        return [len(self._remettant),
+                len(self._date_run),
+                len(self._target)] \
+               + \
+               [len(str(val)) for key, val in self.compteurs_sorted()] \
+               + \
+               [len(self._fichier_log),
+                len(self._fichier_chg)]
 
     @property
     def fichier_log(self):
@@ -123,14 +133,15 @@ class CompteursFichier(object):
         # type: (unicode) -> None
         self._target = target
 
-    def __init__(self, fichier_log, fichier_chg=None, remettant=None, compteurs=None, date_run=None, target=None):
+    def __init__(self, fichier_log, fichier_chg=None, remettant=None, compteurs=None,
+                 date_run=None, target=None):
         # type: (unicode, unicode, unicode, Union[List[CompteurOne], None], unicode) -> None
         self._fichier_log = fichier_log
         self._fichier_chg = fichier_chg
-        self._remettant = remettant
-        self._date_run = date_run
-        self._target = target
-        self._compteurs = self._compteur_list_to_dict(compteurs)  # type: OrderedDict
+        self._remettant   = remettant
+        self._date_run    = date_run
+        self._target      = target
+        self._compteurs   = self._compteur_list_to_dict(compteurs)  # type: OrderedDict
 
     @classmethod
     def _compteur_list_to_dict(cls, compteurs):
@@ -320,7 +331,7 @@ class CompteursFichierColl(object):
     __slots__ = ['_coll', '_lmax', '_normalized']
 
     def __init__(self, compteurs_fichiers):
-        # type: (List[CompteursFichier]) -> CompteursFichierColl
+        # type: (List[CompteursFichier]) -> None
         self._coll = compteurs_fichiers     # type: List[CompteursFichier]
         self._lmax = []
         self._normalized = False
@@ -350,7 +361,8 @@ class CompteursFichierColl(object):
                 compteurs_names += compteurs_fichier.compteurs().keys()
                 compteurs_names = list(set(compteurs_names))
 
-        return ['Fichier log', 'Fichier chargé', 'Remettant', 'Date chargement'] + compteurs_names
+        # return ['Fichier log', 'Fichier chargé', 'Remettant', 'Date chargement', 'Table chargée'] + compteurs_names
+        return ['Remettant', 'Date chargement', 'Table chargée'] + compteurs_names + ['Fichier log', 'Fichier chargé']
 
     @classmethod
     def from_many_files(cls, path_src_file, file_name_list, encoding=DEFAULT_LOG_ENCODING):
@@ -381,7 +393,8 @@ class CompteursFichierColl(object):
         qui le concernent
         :return: liste de CompteursFichier triée selon la date_run présente dans chaque CompteursFichier
         """
-        non_sorted = filter(lambda x: x.remettant == remettant and x.target == 'INFNEGS', self._coll)
+        # on ne retient que les fichiers (et les compteurs) qui ont été chargés dans INFNEGS
+        non_sorted = filter(lambda x: x.remettant == remettant and x.target == TABLE_CIBLE, self._coll)
 
         def format_date(text):
             # date en entrée  DD/MM/YYYY HH:MI:SS
@@ -499,7 +512,7 @@ class CompteursFichierColl(object):
         def format_feuille(p_feuille):
             # ajustement éventuel de la largeur de chaque colonne
             for i in range(1,p_feuille.max_column+1):
-                p_feuille.column_dimensions[get_column_letter(i)].width = max(int(self._lmax[i-1]*1.1),10)
+                p_feuille.column_dimensions[get_column_letter(i)].width = max(int(self._lmax[i-1]*1.05),10)
 
             # p_feuille.column_dimensions[get_column_letter(1)].width = 54
             # p_feuille.column_dimensions[get_column_letter(2)].width = 54
@@ -560,7 +573,7 @@ class CompteursCorrespondance(object):
     ALIAS_TAG = 'alias'
 
     def __init__(self, json_obj, json_file=None):
-        # type: (Dict[Any]) -> CompteursCorrespondance
+        # type: (Dict[Any]) -> None
         self._corresp = json_obj  # type: Dict[Any]
         self._json_file = json_file  # type: unicode
 
@@ -838,7 +851,8 @@ if __name__ == "__main__":
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-09"
-    path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-10"
+    # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-10"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2017-11"
     path_src = path_root
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"

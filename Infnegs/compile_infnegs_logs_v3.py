@@ -81,10 +81,8 @@ class CompteursFichier(object):
         """
         return [len(self._remettant),
                 len(self._date_run),
-                len(self._target)] \
-               + \
-               [len(str(val)) for key, val in self.compteurs_sorted()] \
-               + \
+                len(self._target)] + \
+               [len(str(val)) for key, val in self.compteurs_sorted()] + \
                [len(self._fichier_log),
                 len(self._fichier_chg)]
 
@@ -167,7 +165,7 @@ class CompteursFichier(object):
         return self._compteurs.keys()
 
     def compteurs_sorted(self):
-        # type: (Callable[Any, Any]) -> List[Any]
+        # type: () -> List[Any]
         return self._compteurs.items()
 
     def compteurs(self):
@@ -216,8 +214,8 @@ class CompteursFichier(object):
             re_date_run = re.compile(r"(.*)\|(.*)\|(.*)\|(.*)\|(.*)")  # RE pour trouver la date
             m_date_run = re_date_run.match(the_line)
             if m_date_run is not None:
-                _remettant = m_date_run.group(1)
-                return _remettant
+                _date_run= m_date_run.group(1)
+                return _date_run
             return None
 
         def parse_remettant_conf(this_line):
@@ -238,7 +236,7 @@ class CompteursFichier(object):
 
         def parse_target(this_line):
             # type: (unicode) -> unicode or None
-            re_target = re.compile(r".*LOG\|tableCible .* : *(.*)")  # RE pour trouver table coble
+            re_target = re.compile(r".*LOG\|tableCible .* : *(.*)")  # RE pour trouver table cible
             m_target = re_target.match(this_line)
             if m_target is not None:
                 _target = m_target.group(1)
@@ -246,7 +244,7 @@ class CompteursFichier(object):
 
         def parse_fichier_chg(this_line):
             # type: (unicode) -> unicode or None
-            re_target = re.compile(r".*LOG\|nomFichierIn .* : *(.*)")  # RE pour trouver table coble
+            re_target = re.compile(r".*LOG\|nomFichierIn .* : *(.*)")  # RE pour trouver nom fichier en entrée
             m_target = re_target.match(this_line)
             if m_target is not None:
                 _target = m_target.group(1).split('/')[-1:]
@@ -852,7 +850,9 @@ if __name__ == "__main__":
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-09"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-10"
-    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2017-11"
+    # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2017-11"
+    # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2018-01"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\Depuis_origine"
     path_src = path_root
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"

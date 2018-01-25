@@ -99,7 +99,7 @@ def getSysdate(curs):
         raise(le)
 
 
-def get_AC(entnum, curs):
+def get_AC(entnum, curs, typreq):
     """
     Selectionne les lignes d'une table à partir de critères
 
@@ -108,41 +108,108 @@ def get_AC(entnum, curs):
     :return: les lignes de la table sélectionnées
     """
 
-    req = \
-        """select
-              inf_entnum
-            , case when inf_ac1mnt is not NULL then to_char(inf_ac1mnt) else inf_ac1com end
-            , to_char(inf_dateff,'YYYY-MM-DD')
-            , inf_ac1typcod
-        from
-        (
+    if typreq == 'dateff':
+        # requete avec dateff dans l'order by du row_number()
+        req = \
+            """select
+                  inf_entnum
+                , case when inf_ac1mnt is not NULL then to_char(inf_ac1mnt) else inf_ac1com end
+                , to_char(inf_dateff,'YYYY-MM-DD')
+                , inf_ac1typcod
+            from
+            (
+                select
+                  inf_entnum
+                , inf_ac1mnt
+                , inf_ac1com
+                , inf_dateff
+                , inf_ac1typcod
+                --, sco_etatcod
+                --, sco_sup
+                --, sco_seq_pk
+                --, inf_seq_pk
+                --, inf_datord
+                , row_number() over (partition by inf_entnum order by decode(
+                      sco_etatcod,'ACT',1,2) asc
+                    , trunc(inf_dateff) desc
+                    , inf_sco_seq desc
+                    , inf_seq_pk desc) rn
+                from fra2prod.ac1_infos, fra2prod.scores_rating
+                where inf_sup is null
+                and   sco_sup is null
+                and   sco_etatcod = 'ACT'
+                and   sco_seq_pk = inf_sco_seq
+                and   sco_entnum_pk = inf_entnum
+                and   sco_entnumtyp_pk = inf_entnumtyp
+            )
+            where rn <= 1
+            and inf_entnum = :v1
+            """
+    elif typreq == 'datord':
+        # requete avec datord dans l'order by du row_number()
+        req = \
+            """select
+                  inf_entnum
+                , case when inf_ac1mnt is not NULL then to_char(inf_ac1mnt) else inf_ac1com end
+                , to_char(inf_dateff,'YYYY-MM-DD')
+                , inf_ac1typcod
+            from
+            (
+                select
+                  inf_entnum
+                , inf_ac1mnt
+                , inf_ac1com
+                , inf_dateff
+                , inf_ac1typcod
+                --, sco_etatcod
+                --, sco_sup
+                --, sco_seq_pk
+                --, inf_seq_pk
+                --, inf_datord
+                , row_number() over (partition by inf_entnum order by decode(
+                      sco_etatcod,'ACT',1,2) asc
+                    , trunc(inf_datord) desc
+                    , inf_sco_seq desc
+                    , inf_seq_pk desc) rn
+                from fra2prod.ac1_infos, fra2prod.scores_rating
+                where inf_sup is null
+                and   sco_sup is null
+                and   sco_etatcod = 'ACT'
+                and   sco_seq_pk = inf_sco_seq
+                and   sco_entnum_pk = inf_entnum
+                and   sco_entnumtyp_pk = inf_entnumtyp
+            )
+            where rn <= 1
+            and inf_entnum = :v1
+            """
+    elif typreq == 'ihm_iris':
+        # requete avec datord dans l'order by du row_number()
+        req = \
+            """
             select
-              inf_entnum
-            , inf_ac1mnt
-            , inf_ac1com
-            , inf_dateff
-            , inf_ac1typcod
-            --, sco_etatcod
-            --, sco_sup
-            --, sco_seq_pk
-            --, inf_seq_pk
-            --, inf_datord
-            , row_number() over (partition by inf_entnum order by decode(
-                  sco_etatcod,'ACT',1,2) asc
-                , trunc(inf_dateff) desc
-                , inf_sco_seq desc
-                , inf_seq_pk desc) rn
-            from fra2prod.ac1_infos, fra2prod.scores_rating
-            where inf_sup is null
-            and   sco_sup is null
-            and   sco_etatcod = 'ACT'
-            and   sco_seq_pk = inf_sco_seq
-            and   sco_entnum_pk = inf_entnum
-            and   sco_entnumtyp_pk = inf_entnumtyp
-        )
-        where rn <= 1
-        and inf_entnum = :v1
-        """
+                  inf_entnum
+                , case when inf_ac1mnt is not NULL then to_char(inf_ac1mnt) else inf_ac1com end
+                , to_char(inf_dateff,'YYYY-MM-DD')
+                , inf_ac1typcod
+            FROM (
+              SELECT row_number() over (order by ac.inf_seq_pk desc) rn, ac.inf_entnum, ac.inf_ac1mnt, ac.inf_ac1com, ac.inf_dateff, ac.inf_ac1typcod 
+              FROM fra2prod.ac1_infos ac
+              WHERE ac.inf_entnumtyp = 0
+              and ac.inf_entnum = :v1
+              and ac.inf_sup is null
+              and ac.inf_ac1statutcod = 'OK'
+              and ac.inf_sco_seq in (
+                select sco_seq_pk
+                from fra2prod.scores_rating
+                where sco_entnumtyp_pk = 0
+                and sco_entnum_pk = :v1
+                and sco_sup is null
+                and sco_etatcod = 'ACT')
+            )
+            WHERE rn <= 1
+            """
+    else:
+        raise(Exception('typreq inconnu:'+typreq))
 
     try:
         curs.execute(req, {'v1': entnum})
@@ -163,7 +230,7 @@ def format_siren(entnum):
         return None
 
 #
-def enrich_AC (fileNameIn, fileNameOut, base_from):
+def enrich_AC(fileNameIn, fileNameOut, base_from, typreq):
     """
     Fonction qui copie les jugements disponibles dans une base Oracle vers une autre.
     Le schéma bileprod doit exister dans les deux bases et la base de destination doit être accessible en écriture.
@@ -191,7 +258,7 @@ def enrich_AC (fileNameIn, fileNameOut, base_from):
                 continue
             # reformatter le siren: zéros à gauche
             entnum = format_siren(entnum)
-            ac_entnum, ac_val, ac_date, ac_auto = get_AC(entnum=entnum, curs=curs_from)
+            ac_entnum, ac_val, ac_date, ac_auto = get_AC(entnum=entnum, curs=curs_from, typreq=typreq)
             writer.writerow(dict(zip(fieldnames, [ac_entnum, deno, ac_auto, str(ac_val), str(ac_date)])))
             if i_line%1000 == 0:
                 logging.info('Lignes traitées: {}'.format(i_line))
@@ -221,9 +288,21 @@ if __name__ == "__main__":
     base_from   = 'clone', 'fra2prod'
 
     # enrichCSV (entnum='428278394', base_from=base_from, base_to=base_to)
-    enrich_AC(fileNameIn='C:\Users\emmanuel_barillot\Documents\Work\Manpower\siren_manpower\siren_manpower.csv'
-                , fileNameOut = 'C:\Users\emmanuel_barillot\Documents\Work\Manpower\siren_manpower\siren_manpower_avec_AC.csv'
-                , base_from=base_from)
+    # enrich_AC(fileNameIn=r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-18\siren_manpower.csv'
+    #             , fileNameOut = r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-18\siren_manpower_avec_AC_datord.csv'
+    #             , base_from=base_from
+    #             , typreq='datord')
+
+    # enrich_AC(fileNameIn=r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-18\siren_manpower.csv'
+    #             , fileNameOut = r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-18\siren_manpower_avec_AC_dateff.csv'
+    #             , base_from=base_from
+    #             , typreq = 'dateff')
+
+    enrich_AC(fileNameIn=r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-21\siren_manpower.csv'
+                , fileNameOut = r'C:\Users\emmanuel_barillot\Documents\Work\Manpower\2017-12-21\siren_manpower_avec_AC_ihm_iris.csv'
+                , base_from=base_from
+                , typreq = 'ihm_iris')
+
 
 
     logging.info ('====================')

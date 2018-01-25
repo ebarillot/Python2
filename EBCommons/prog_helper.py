@@ -154,6 +154,7 @@ def log_write(s=u"", level=logging.INFO):
     # type: (unicode) -> None
     """
     Ecriture d'une ligne de logging
+    ATTENTION: unicode obligatoire en entrée, ne gère pas une str
     :param s: une ligne à écrire
     :param level: niveau de gravité
     :return: None

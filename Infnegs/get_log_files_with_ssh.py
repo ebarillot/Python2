@@ -90,7 +90,7 @@ def is_accessible_src_dir(ssh,src_dir):
         return False
 
 
-def read_host_src_dir_file_names(ssh, src_dir, how):
+def     read_host_src_dir_file_names(ssh, src_dir, how):
     # type: (Optional[SSHClient], str, str) -> List[unicode]
     if how == "ls":
         cmd = b"ls " + src_dir + b"/chgInfnegs*.log"
@@ -160,7 +160,7 @@ def main(argv):
     host_password   = br'bfrance'
     src_dir         = br"/PROSIP_LOGS/BFRANCE"
     work_dir        = b"C:\Users\emmanuel_barillot\Documents\Work"
-    dest_dir        = work_dir + br"\Infnegs_logs\2017-11"
+    dest_dir        = work_dir + br"\Infnegs_logs\2018-01"
 
     copy_files_src_to_dest(dest_dir, src_dir, host, host_user, host_password)
 

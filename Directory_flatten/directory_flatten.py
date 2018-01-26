@@ -404,7 +404,7 @@ def trt_folder(folder_name):
                   , extensions=('.JPG', '.JPEG', '.PEF', '.NEF', '.RW2', '.DOP')
                   , include_patterns=('*',)
                   , exclude_patterns=('*DxO*','*red*','resize*')
-                  , exclude_dirs=('mary-resize-mail',))
+                  , exclude_dirs=('mary-resize-mail','Selection','Web','web','selec'))
     # unflatten_files(path_dest_for_flatten, path_dest_for_rebuild_file_tree)
 
 
@@ -451,5 +451,23 @@ if __name__ == "__main__":
     # trt_folder("2005-07-13-VacancesHautesAlpesQueyras")
     # move_DxO_files(r"2007-04-10-Amsterdam-Bruxelles")
     # move_DxO_files(r"2005-04-24-Bretagne 56")
-    move_DxO_files("2005-07-13-VacancesHautesAlpesQueyras")
+    # move_DxO_files("2005-07-13-VacancesHautesAlpesQueyras")
+
+    # trt_folder(r"2011-07-23-Ecosse")
+    # move_DxO_files(r"2011-07-23-Ecosse")
+
+    # trt_folder(r"2011-04-22-Cappadoce-Istambul")
+    # trt_folder(r"2012-05-03-London")
+    # trt_folder(r"2012-08-13-Vendee")
+    # move_DxO_files(r"2011-04-22-Cappadoce-Istambul")
+    # move_DxO_files(r"2012-05-03-London")
+    # move_DxO_files(r"2012-08-13-Vendee")
+
+    # trt_folder(r"2017-05-08-Chateau_Fougeres_Bievre")
+    # trt_folder(r"2017-05-21-Terra-Botanica")
+    # trt_folder(r"2017-08-31-Chemery")
+    # trt_folder(r"2017-04-20-LaCiotat")
+    # trt_folder(r"2017-03-26-Carnaval-Blois")
+    # trt_folder(r"2015-07-25-Bretagne")
+    # trt_folder(r"2015-05-08-cirque-amar")
     log_exit()

@@ -1,0 +1,2 @@
+# spam.py
+eggs = "beans"

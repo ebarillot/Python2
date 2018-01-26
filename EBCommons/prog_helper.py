@@ -14,6 +14,8 @@ from os.path import basename
 
 # import cx_Oracle
 from typing import Any
+import psutil
+from operator import itemgetter
 
 __author__ = 'Emmanuel Barillot'
 
@@ -155,6 +157,7 @@ def log_write(s=u"", level=logging.INFO):
     # type: (unicode) -> None
     """
     Ecriture d'une ligne de logging
+    ATTENTION: unicode obligatoire en entrée, ne gère pas une str
     :param s: une ligne à écrire
     :param level: niveau de gravité
     :return: None
@@ -163,3 +166,22 @@ def log_write(s=u"", level=logging.INFO):
     # frame, filename, line_number, function_name, lines, index = inspect.stack()[1]
     filename, line_number, function_name = _who_call_me()
     logging_fun[level]("[{}:{}:{}] {}".format(basename(filename), line_number, function_name, s))
+
+
+def print_proc_rsrc():
+    # pid = os.getpid()
+    p = psutil.Process()
+    with p.oneshot():
+        log_write('--- name: {}'.format(p.name()))  # execute internal routine once collecting multiple info
+        log_write('cpu_times: {}'.format(p.cpu_times()))  # return cached value
+        log_write('cpu_percent: {}'.format(p.cpu_percent()))  # return cached value
+        log_write('memory_info: ')  # return cached value
+        mem_info_data = map(lambda x: x/1024L, p.memory_info())
+        mem_info_names = ['rss', 'vms', 'num_page_faults', 'peak_wset', 'wset', 'peak_paged_pool', 'paged_pool', 'peak_nonpaged_pool', 'nonpaged_pool', 'pagefile', 'peak_pagefile', 'private']
+        for name, data in itemgetter(0,1,3,4)(zip(mem_info_names, mem_info_data)):
+            log_write('  {}  : {}'.format(name, data))  # return cached value
+
+        # log_write('status: {}'.format(p.status())) # return cached value
+        # log_write('create_time: {}'.format(p.create_time()))  # return cached value
+        # log_write('memory use: {}'.format(p.memory_info()[3]/1024))
+

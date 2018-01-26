@@ -25,58 +25,64 @@ from EBCommons.prog_helper import LocalError, get_fun_ref, log_exit, log_init, l
 __author__ = 'Emmanuel Barillot'
 
 # constantes
+# la table cible dans laquelle les chargements ont été faits: on ne retient que les chargements dans cette table
+TABLE_CIBLE = 'INFNEGS'
 # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
-PATTERN_INGNEGS_LOG = r"chg*.log"
+PATTERN_INGNEGS_LOG = r"chgInf*.log"
 # encoding des fichiers log à analyser, par defaut
 DEFAULT_LOG_ENCODING = r'iso-8859-15'
 
 # Class: Contient les informations d'un compteur
 CompteurOne = NamedTuple(b'CompteurOne', [(b'num', int), (b'name', unicode), (b'value', int)])
 
-CompteursFichierBean = NamedTuple(b'CptFi',
-                                  [(b'fichier', unicode),
-                                   (b'remettant', unicode),
-                                   (b'date_run', unicode),
-                                   (b'compteurs', Dict)])
+# CompteursFichierBean = NamedTuple(b'CptFi',
+#                                   [(b'fichier', unicode),
+#                                    (b'remettant', unicode),
+#                                    (b'remettant_public', unicode),
+#                                    (b'date_run', unicode),
+#                                    (b'compteurs', Dict)])
 
 
 # cptfi = CompteursFichierBean(fichier='fic', remettant='INTRUM', date_run='2017/08/01 10:00:00', compteurs=dict())
 
-
 # TODO pour remplacer CompteursFichiers
 # l'idée est d'éviter tout le code inutile
-class CompteursFichierExtended(CompteursFichierBean):
-    pass
+# class CompteursFichierExtended(CompteursFichierBean):
+#     pass
 
 
 class CompteursFichier(object):
     """
     Contient tous les compteurs associés à un nom de fichier log
     """
-    __slots__ = ['_compteurs_line', 'fields_lengths', '_fichier_log', '_fichier_chg', '_remettant', '_date_run',
-                 '_target', '_compteurs']
+    __slots__ = ['_compteurs_line', 'fields_lengths', '_fichier_log', '_fichier_chg',
+                '_remettant_confid', '_remettant_public',
+                '_date_run', '_target', '_compteurs']
 
     @property
     def compteurs_line(self):
         """
         :return: la liste des valeurs de tous les champs d'un CompteursFichier, y compris la valeur des compteurs
         """
-        return [self.fichier_log,
-                self.fichier_chg,
-                self.remettant,
-                self.date_run] + \
-               [val for key, val in self.compteurs_sorted()]
+        return [self._remettant_confid,
+                self._remettant_public,
+                self._date_run,
+                self._target] + \
+               [val for key, val in self.compteurs_sorted()] + \
+               [self._fichier_log, self._fichier_chg]
 
     @property
     def fields_lengths(self):
         """
         :return: la liste des longueurs (en caracteres) des valeurs de tous les champs
         """
-        return [len(self.fichier_log),
-                len(self.fichier_chg),
-                len(self.remettant),
-                len(self.date_run)] + \
-               [len(str(val)) for key, val in self.compteurs_sorted()]
+        return [len(self._remettant_confid),
+                len(self._remettant_public),
+                len(self._date_run),
+                len(self._target)] + \
+               [len(str(val)) for key, val in self.compteurs_sorted()] + \
+               [len(self._fichier_log),
+                len(self._fichier_chg)]
 
     @property
     def fichier_log(self):
@@ -94,14 +100,24 @@ class CompteursFichier(object):
         self._fichier_chg = fichier_chg
 
     @property
-    def remettant(self):
+    def remettant_confid(self):
         # type: () -> unicode
-        return self._remettant
+        return self._remettant_confid
 
-    @remettant.setter
-    def remettant(self, remettant):
+    @remettant_confid.setter
+    def remettant_confid(self, remettant_confid):
         # type: (unicode) -> None
-        self._remettant = remettant
+        self._remettant_confid = remettant_confid
+
+    @property
+    def remettant_public(self):
+        # type: () -> unicode
+        return self._remettant_public
+
+    @remettant_public.setter
+    def remettant_public(self, remettant_public):
+        # type: (unicode) -> None
+        self._remettant_public = remettant_public
 
     @property
     def date_run(self):
@@ -123,14 +139,16 @@ class CompteursFichier(object):
         # type: (unicode) -> None
         self._target = target
 
-    def __init__(self, fichier_log, fichier_chg=None, remettant=None, compteurs=None, date_run=None, target=None):
-        # type: (unicode, unicode, unicode, Union[List[CompteurOne], None], unicode) -> None
-        self._fichier_log = fichier_log
-        self._fichier_chg = fichier_chg
-        self._remettant = remettant
-        self._date_run = date_run
-        self._target = target
-        self._compteurs = self._compteur_list_to_dict(compteurs)  # type: OrderedDict
+    def __init__(self, fichier_log, fichier_chg=None, remettant_confid=None, remettant_public=None, compteurs=None,
+                 date_run=None, target=None):
+        # type: (unicode, unicode, unicode, unicode, Union[List[CompteurOne], None], unicode) -> None
+        self._fichier_log       = fichier_log
+        self._fichier_chg       = fichier_chg
+        self._remettant_confid  = remettant_confid
+        self._remettant_public  = remettant_public
+        self._date_run          = date_run
+        self._target            = target
+        self._compteurs         = self._compteur_list_to_dict(compteurs)  # type: OrderedDict
 
     @classmethod
     def _compteur_list_to_dict(cls, compteurs):
@@ -156,7 +174,7 @@ class CompteursFichier(object):
         return self._compteurs.keys()
 
     def compteurs_sorted(self):
-        # type: (Callable[Any, Any]) -> List[Any]
+        # type: () -> List[Any]
         return self._compteurs.items()
 
     def compteurs(self):
@@ -178,9 +196,10 @@ class CompteursFichier(object):
     def print_compteurs(self):
         # type: () -> None
         """affichage des compteurs"""
-        log_write("Compteurs du fichier_log {} / fichier chargé {} - {} :".format(self._fichier_log.encode('utf8'),
-                                                                                  self._fichier_chg.encode('utf8'),
-                                                                                  self._remettant),
+        log_write("Compteurs du fichier_log {} / fichier chargé {} - {}/{} :".format(self._fichier_log.encode('utf8'),
+                                                                                    self._fichier_chg.encode('utf8'),
+                                                                                    self._remettant_confid,
+                                                                                    self._remettant_public),
                   level=logging.DEBUG)
         for cpt_name, cpt_value in self._compteurs.items():
             log_write("{0:60.60s}: {1:>9}".format(cpt_name, cpt_value), level=logging.DEBUG)
@@ -205,17 +224,17 @@ class CompteursFichier(object):
             re_date_run = re.compile(r"(.*)\|(.*)\|(.*)\|(.*)\|(.*)")  # RE pour trouver la date
             m_date_run = re_date_run.match(the_line)
             if m_date_run is not None:
-                _remettant = m_date_run.group(1)
-                return _remettant
+                _date_run= m_date_run.group(1)
+                return _date_run
             return None
 
-        def parse_remettant_conf(this_line):
+        def parse_remettant_confid(this_line):
             # type: (unicode) -> unicode or None
-            re_remettant_conf = re.compile(r".*LOG\|supportcodCONF .* : *(.*)")  # RE pour trouver ligne du remettant
-            m_remettant_conf = re_remettant_conf.match(this_line)
-            if m_remettant_conf is not None:
-                _remettant_conf = m_remettant_conf.group(1)
-                return _remettant_conf
+            re_remettant_confid = re.compile(r".*LOG\|supportcodCONF .* : *(.*)")  # RE pour trouver ligne du remettant
+            m_remettant_confid = re_remettant_confid.match(this_line)
+            if m_remettant_confid is not None:
+                _remettant_confid = m_remettant_confid.group(1)
+                return _remettant_confid
 
         def parse_remettant_public(this_line):
             # type: (unicode) -> unicode or None
@@ -227,7 +246,7 @@ class CompteursFichier(object):
 
         def parse_target(this_line):
             # type: (unicode) -> unicode or None
-            re_target = re.compile(r".*LOG\|tableCible .* : *(.*)")  # RE pour trouver table coble
+            re_target = re.compile(r".*LOG\|tableCible .* : *(.*)")  # RE pour trouver table cible
             m_target = re_target.match(this_line)
             if m_target is not None:
                 _target = m_target.group(1)
@@ -235,7 +254,7 @@ class CompteursFichier(object):
 
         def parse_fichier_chg(this_line):
             # type: (unicode) -> unicode or None
-            re_target = re.compile(r".*LOG\|nomFichierIn .* : *(.*)")  # RE pour trouver table coble
+            re_target = re.compile(r".*LOG\|nomFichierIn .* : *(.*)")  # RE pour trouver nom fichier en entrée
             m_target = re_target.match(this_line)
             if m_target is not None:
                 _target = m_target.group(1).split('/')[-1:]
@@ -270,7 +289,7 @@ class CompteursFichier(object):
             # recherche de la date dans la 1ere ligne
             date_run = None
             fichier_chg = None
-            remettant_conf = None
+            remettant_confid = None
             remettant_public = None
             nb_compteurs = None
             target = None
@@ -289,8 +308,8 @@ class CompteursFichier(object):
                         log_write(the_file_name + ", fichier_chg: " + fichier_chg)
                         compteurs_fichier.fichier_chg = fichier_chg
                 # recherche de la ligne qui contient le remettant
-                if remettant_conf is None:
-                    remettant_conf = parse_remettant_conf(line_decoded)
+                if remettant_confid is None:
+                    remettant_confid = parse_remettant_confid(line_decoded)
                 if remettant_public is None:
                     remettant_public = parse_remettant_public(line_decoded)
                 if target is None:
@@ -306,10 +325,11 @@ class CompteursFichier(object):
                     compteur = parse_compteur(line_decoded)
                     if compteur is not None:
                         compteurs_fichier.add(compteur_one=compteur)
-            compteurs_fichier.remettant = remettant_conf if remettant_conf else remettant_public
+            compteurs_fichier.remettant_public = remettant_public if remettant_public else 'inconnu'
+            compteurs_fichier.remettant_confid = remettant_confid if remettant_confid else remettant_public
             compteurs_fichier.target = target if target else None
-            if compteurs_fichier.remettant:
-                log_write(the_file_name + ", remettant: " + compteurs_fichier.remettant)
+            if compteurs_fichier.remettant_confid:
+                log_write(the_file_name + ", remettant_confid: " + compteurs_fichier.remettant_confid)
         return compteurs_fichier
 
 
@@ -320,7 +340,7 @@ class CompteursFichierColl(object):
     __slots__ = ['_coll', '_lmax', '_normalized']
 
     def __init__(self, compteurs_fichiers):
-        # type: (List[CompteursFichier]) -> CompteursFichierColl
+        # type: (List[CompteursFichier]) -> None
         self._coll = compteurs_fichiers     # type: List[CompteursFichier]
         self._lmax = []
         self._normalized = False
@@ -350,7 +370,7 @@ class CompteursFichierColl(object):
                 compteurs_names += compteurs_fichier.compteurs().keys()
                 compteurs_names = list(set(compteurs_names))
 
-        return ['Fichier log', 'Fichier chargé', 'Remettant', 'Date chargement'] + compteurs_names
+        return ['Remettant', 'Remettant public', 'Date chargement', 'Table chargée'] + compteurs_names + ['Fichier log', 'Fichier chargé']
 
     @classmethod
     def from_many_files(cls, path_src_file, file_name_list, encoding=DEFAULT_LOG_ENCODING):
@@ -366,7 +386,7 @@ class CompteursFichierColl(object):
 
     def remettants_names(self):
         # type: () -> List[unicode]
-        return sorted(set([cpt.remettant for cpt in self._coll]))
+        return sorted(set([cpt.remettant_confid for cpt in self._coll]))
 
     def upd_lmax(self, field_lengths):
         # type: (List[int]) -> None
@@ -374,14 +394,15 @@ class CompteursFichierColl(object):
             self._lmax = [1]*len(field_lengths)
         self._lmax = map(max, zip(self._lmax, field_lengths))
 
-    def get_compteurs_fichier_by_remettant(self, remettant):
+    def get_compteurs_fichier_by_remettant_confid(self, remettant_confid):
         # type: (unicode) -> List[CompteursFichier]
         """
-        :param remettant: le nom du remettant dont on va retourner les compteurs présents dans la série de fichiers
+        :param remettant_confid: le nom du remettant_confid dont on va retourner les compteurs présents dans la série de fichiers
         qui le concernent
         :return: liste de CompteursFichier triée selon la date_run présente dans chaque CompteursFichier
         """
-        non_sorted = filter(lambda x: x.remettant == remettant and x.target == 'INFNEGS', self._coll)
+        # on ne retient que les fichiers (et les compteurs) qui ont été chargés dans INFNEGS
+        non_sorted = filter(lambda x: x.remettant_confid == remettant_confid and x.target == TABLE_CIBLE, self._coll)
 
         def format_date(text):
             # date en entrée  DD/MM/YYYY HH:MI:SS
@@ -415,7 +436,8 @@ class CompteursFichierColl(object):
         for compteurs_fichier in self._coll:
             compteurs_normalises_fichier = CompteursFichier(fichier_log=compteurs_fichier.fichier_log,
                                                             fichier_chg=compteurs_fichier.fichier_chg,
-                                                            remettant=compteurs_fichier.remettant,
+                                                            remettant_confid=compteurs_fichier.remettant_confid,
+                                                            remettant_public=compteurs_fichier.remettant_public,
                                                             date_run=compteurs_fichier.date_run,
                                                             target=compteurs_fichier.target,
                                                             compteurs=None)
@@ -447,7 +469,8 @@ class CompteursFichierColl(object):
         for compteurs_fichier in self._coll:
             compteurs_normalises = CompteursFichier(fichier_log=compteurs_fichier.fichier_log,
                                                     fichier_chg=compteurs_fichier.fichier_chg,
-                                                    remettant=compteurs_fichier.remettant,
+                                                    remettant_confid=compteurs_fichier.remettant_confid,
+                                                    remettant_public=compteurs_fichier.remettant_public,
                                                     date_run=compteurs_fichier.date_run,
                                                     target=compteurs_fichier.target,
                                                     compteurs=None)
@@ -499,7 +522,7 @@ class CompteursFichierColl(object):
         def format_feuille(p_feuille):
             # ajustement éventuel de la largeur de chaque colonne
             for i in range(1,p_feuille.max_column+1):
-                p_feuille.column_dimensions[get_column_letter(i)].width = max(int(self._lmax[i-1]*1.1),10)
+                p_feuille.column_dimensions[get_column_letter(i)].width = max(int(self._lmax[i-1]*1.05),10)
 
             # p_feuille.column_dimensions[get_column_letter(1)].width = 54
             # p_feuille.column_dimensions[get_column_letter(2)].width = 54
@@ -520,21 +543,21 @@ class CompteursFichierColl(object):
         feuille = workbook.active  # grab the active worksheet, tjrs présente par défaut
 
         # creation d'une feuille par remettant
-        first_remettant = 1
-        for remettant in compteurs_coll.remettants_names():
-            if first_remettant:
-                first_remettant = None
+        first_remettant_confid = 1
+        for remettant_confid in compteurs_coll.remettants_names():
+            if first_remettant_confid:
+                first_remettant_confid = None
                 # 1ere feuille associée au 1er remettant de la liste
-                feuille.title = remettant
+                feuille.title = remettant_confid
             else:
                 # création d'une nouvelle feuille
-                feuille = workbook.create_sheet(remettant)
+                feuille = workbook.create_sheet(remettant_confid)
 
             # ajout des en-têtes, à partir des libellés
             # Les compteurs sont triés en fonction du numéro qui leur est attribué dans la correspondance
             feuille.append(compteurs_coll.title_line(corresp))
             # ajout des valeurs dans les lignes suivantes pour les lignes qui concernent un remettant donné
-            for compteurs_fichier in compteurs_coll.get_compteurs_fichier_by_remettant(remettant):
+            for compteurs_fichier in compteurs_coll.get_compteurs_fichier_by_remettant_confid(remettant_confid):
                 next_line = compteurs_fichier.compteurs_line
                 feuille.append(next_line)
             format_feuille(feuille)
@@ -560,7 +583,7 @@ class CompteursCorrespondance(object):
     ALIAS_TAG = 'alias'
 
     def __init__(self, json_obj, json_file=None):
-        # type: (Dict[Any]) -> CompteursCorrespondance
+        # type: (Dict[Any]) -> None
         self._corresp = json_obj  # type: Dict[Any]
         self._json_file = json_file  # type: unicode
 
@@ -686,7 +709,8 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
         compteurs_coll = CompteursFichierColl(
             [
                 CompteursFichier(fichier_log='fichier_1'
-                                 , remettant='Remettant 1'
+                                 , remettant_confid='Remettant 1'
+                                 , remettant_public='Remettant 1'
                                  , compteurs=map(lambda x: CompteurOne(*x)
                                                  , [
                                                      (' 0', 'cpt1', 12)
@@ -697,7 +721,8 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
                                                  )
                                  )
                 , CompteursFichier(fichier_log='fichier_2'
-                                   , remettant='Remettant 2'
+                                   , remettant_confid='Remettant 2'
+                                   , remettant_public='Remettant 1'
                                    , compteurs=map(lambda x: CompteurOne(*x)
                                                    , [
                                                        (' 0', 'cpt1', 13)
@@ -835,13 +860,17 @@ if __name__ == "__main__":
     log_init(level=logging.DEBUG)
     log_write(">>>>>>>>>>>>>>>>>>>> Nouvelle série de tests <<<<<<<<<<<<<<<<<<<<")
 
-    path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
+    # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-09"
+    # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-10"
+    # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2017-11"
+    # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2018-01"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2018-01-Depuis_origine"
     path_src = path_root
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"
-    excel_out_filename = "compteurs.xlsx"
+    excel_out_filename = "Remettants_Ellixium_compteurs_logs.xlsx"
     corresp_file_name = r'compteurs_correspondances_V3.json'
 
     res = launch(path_src, one_log_file_name, DEFAULT_LOG_ENCODING, path_dest_for_excel, excel_out_filename,

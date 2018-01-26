@@ -156,7 +156,7 @@ class CompteursFichier(object):
                 compteur_num += 1
                 compteur_value = compteurs_as_dict[compteur_name] if compteur_name in compteurs_as_dict.keys() else 0
                 compteurs_normalises_list += [CompteurOne(compteur_num, compteur_name, compteur_value)]
-            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(),
                                                             compteurs_fichier.remettant(),
                                                             compteurs_normalises_list,
                                                             compteurs_fichier.date_run())]
@@ -179,7 +179,7 @@ class CompteursFichier(object):
         compteurs_fichier_list_out = list()
         corresp_compteurs_norm = corresp.get_compteurs_norm()
         for compteurs_fichier in compteurs_fichier_list_in:
-            corresp_for_this_fichier = corresp.get_corresp_by_key(compteurs_fichier.fichier_log())
+            corresp_for_this_fichier = corresp.get_corresp_by_key(compteurs_fichier.fichier())
             compteurs_normalises_dict = dict()
             #  1ere passe pour créer la liste / réceptacle des compteurs normalisés pour un fichier donné
             for compteur_name_norm in corresp_compteurs_norm.keys():
@@ -208,7 +208,7 @@ class CompteursFichier(object):
                                                      compteurs_normalises_dict[cpt]["compteur_value"])
                                          for cpt in compteurs_normalises_dict.keys()]
             compteurs_normalises_list.sort(key=CompteurOne.key)
-            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(),
                                                             compteurs_fichier.remettant(),
                                                             compteurs_normalises_list,
                                                             compteurs_fichier.date_run())]
@@ -231,7 +231,7 @@ class CompteursCorrespondance(object):
     _compteurs_normalises_key = 'compteurs normalisés'
 
     def __init__(self, json_obj):
-        # type: (Dict[Any]) -> CompteursCorrespondance
+        # type: (Dict[Any]) -> None
         self._corresp = json_obj
 
     @classmethod
@@ -690,8 +690,9 @@ if __name__ == "__main__":
     log_init(level=logging.DEBUG)
     log_write(">>>>>>>>>>>>>>>>>>>> Nouvelle série de tests <<<<<<<<<<<<<<<<<<<<")
 
-    path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
+    # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08\qqn"
     # path_root = r"D:\Documents\Projets\work\Infnegs_logs\2017-08"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Infnegs_logs\2017-11"
     path_src = path_root
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"

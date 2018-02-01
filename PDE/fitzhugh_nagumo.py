@@ -12,9 +12,13 @@ k = -.005
 
 size = 100  # size of the 2D grid
 dx = 2./size  # space step
-T = 10.0  # total time
-dt = .9 * dx**2/2  # time step
+T = 20.0  # total time
+accler = 10.0
+dt = accler*.9 * dx**2/2.  # time step
 n = int(T/dt)
+
+print('dt={}'.format(dt))
+print('n={}'.format(n))
 
 U = np.random.rand(size, size)
 V = np.random.rand(size, size)
@@ -28,6 +32,14 @@ def laplacian(Z):
     Zcenter = Z[1:-1,1:-1]
     return (Ztop + Zleft + Zbottom + Zright - 4 * Zcenter) / dx**2
 
+plt.ion()
+
+# image initiale
+plt.imshow(U, cmap=plt.copper(), extent=[-1,1,-1,1])
+# plt.draw()
+plt.show()
+plt.xticks([]); plt.yticks([])
+plt.pause(0.5)
 
 # We simulate the PDE with the finite difference method.
 for i in range(n):
@@ -49,6 +61,17 @@ for i in range(n):
         Z[:,0] = Z[:,1]
         Z[:,-1] = Z[:,-2]
 
-# plt.imshow(U, cmap=plt.get_cmap('gray', extent=[-1,1,-1,1]);
-# plt.imshow(U, cmap=plt.cm.copper, extent=[-1,1,-1,1]);
-# plt.xticks([]); plt.yticks([]);
+    if (i%(n/50))==0:
+        print('i={}, t={}'.format(i, dt*i))
+        plt.imshow(U, cmap=plt.copper(), extent=[-1, 1, -1, 1])
+        # plt.draw()
+        plt.show()
+        plt.pause(0.01)
+
+
+plt.imshow(U, cmap=plt.copper(), extent=[-1,1,-1,1])
+# plt.xticks([]); plt.yticks([])
+# plt.draw()
+plt.show()
+plt.pause(2)
+

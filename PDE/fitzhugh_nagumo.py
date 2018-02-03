@@ -10,18 +10,21 @@ b = 5e-3
 tau = .1
 k = -.005
 
-size = 100  # size of the 2D grid
-dx = 2./size  # space step
-T = 20.0  # total time
-accler = 10.0
-dt = accler*.9 * dx**2/2.  # time step
+
+real_size_factor = 4
+real_size = 2.*real_size_factor
+discret_size = 100*real_size_factor  # size of the 2D grid
+dx = real_size/discret_size # space step
+T = 40.0  # total time
+acceler = 10.0
+dt = acceler*.9 * dx**2/2.  # time step
 n = int(T/dt)
 
 print('dt={}'.format(dt))
 print('n={}'.format(n))
 
-U = np.random.rand(size, size)
-V = np.random.rand(size, size)
+U = np.random.rand(discret_size, discret_size)
+V = np.random.rand(discret_size, discret_size)
 
 
 def laplacian(Z):

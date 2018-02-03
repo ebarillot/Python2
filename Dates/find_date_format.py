@@ -21,7 +21,7 @@ csv_sep = ';'
 
 def create_file(file_name, encoding_src, nlines):
     # type: (unicode, unicode, int) -> None
-    with open(file_name, 'w') as f:
+    with open(file_name, br'w') as f:
         for i in xrange(nlines):
             f.write('{0:02}/{1:02}/{2:4}\n'.format(i%27+1,(i*i)%11+1,2010+((i*i*i)%7)))
     return
@@ -30,7 +30,7 @@ def create_file(file_name, encoding_src, nlines):
 def get_file_lines(file_name, encoding_src):
     # type: (unicode, unicode) -> List
     flines = []
-    with open(file_name, 'r') as f:
+    with open(file_name, br'r') as f:
         for linef in f:
             flines.append(linef.rstrip().decode(encoding_src))
             # yield linef.rstrip().decode(encoding_src)

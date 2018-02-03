@@ -24,7 +24,7 @@ csv_sep = ';'
 
 def create_file(file_name, encoding_src, nlines):
     # type: (unicode, unicode, int) -> None
-    with open(file_name, 'w') as f:
+    with open(file_name, br'w') as f:
         for i in xrange(nlines):
             f.write('{0:8}: {0:8}\n'.format(i,i))
     return
@@ -33,7 +33,7 @@ def create_file(file_name, encoding_src, nlines):
 def get_file_lines_iter(file_name, encoding_src):
     # type: (unicode, unicode) -> List
     flines = [0]*10
-    with open(file_name, 'r') as f:
+    with open(file_name, br'r') as f:
         i = 0
         for linef in f:
             flines[i%10] = linef.rstrip().decode(encoding_src)
@@ -46,7 +46,7 @@ def get_file_lines_iter(file_name, encoding_src):
 def get_file_lines_readline(file_name, encoding_src):
     # type: (unicode, unicode) -> List
     flines = [0]*10
-    with open(file_name, 'r') as f:
+    with open(file_name, br'r') as f:
         i = 0
         for linef in f.readlines():
             flines[i%10] = linef.rstrip().decode(encoding_src)

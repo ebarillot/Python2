@@ -7,6 +7,7 @@ import pprint
 import re
 import sys
 import traceback
+import typing
 
 import paramiko as pk
 from openpyxl import Workbook as ExcelWorkbook
@@ -82,14 +83,20 @@ def access_dest_dir(dest_dir):
 
 
 def become_accessible_dest_dir(dest_dir):
+    # type: (unicode) -> bool
     access_mode = 0o755
     if os.access(dest_dir, os.F_OK):    # existe
-        if os.access(dest_dir, os.R_OK | os.W_OK | os.X_OK): # existe et accessible
+        if os.access(dest_dir, os.R_OK | os.W_OK | os.X_OK):  # existe et accessible
             return True
         else: # existe et non accessible => on essaie de le rendre accessible
-            return os.chmod(dest_dir, access_mode)
-    else: # inexistant => on essaie le crée
-        return os.makedirs(dest_dir, access_mode)
+            os.chmod(dest_dir, access_mode)
+    else: # inexistant => on essaie de le créer
+        os.makedirs(dest_dir, access_mode)
+    # on vérifie s'il est accesible maintenant
+    if os.access(dest_dir, os.R_OK | os.W_OK | os.X_OK): # existe et accessible
+        return True
+    else:
+        return False
 
 
 def is_accessible_src_dir(ssh,src_dir):
@@ -447,11 +454,12 @@ def call_read_prg_log_many_to_excel(dir_name, file_name_re, excel_file_name):
 # programme principal
 #####################
 def main(argv):
-    host            = 'frtrsifd01'
-    host_user       = 'bfrance'
-    host_password   = 'bfrance'
-    src_dir         = "/PROSIP_LOGS/BFRANCE"
-    dest_dir        = "D:\Documents\Projets\work\chgInfnegs_logs"
+    host            = r'frtrsifd01'
+    host_user       = r'bfrance'
+    host_password   = r'bfrance'
+    src_dir         = r"/PROSIP_LOGS/BFRANCE"
+    work_dir        = b"C:\Users\emmanuel_barillot\Documents\Work"
+    dest_dir        = work_dir + r"\Infnegs_logs\2017-11"
     file_name       = "chgInfnegs_201610311788352.log"
     excel_file_name = "compteurs.xlsx"
 
@@ -489,12 +497,12 @@ def main(argv):
 
     # funs_to_test = [call_ssh, call_copy_files_src_to_dest,call_read_prg_log]
     # funs_to_test = [call_ssh] # la fonction
-    # funs_to_test = [call_copy_files_src_to_dest] # la fonction
+    funs_to_test = [call_copy_files_src_to_dest] # la fonction
     # funs_to_test = [call_read_prg_log] # la fonction à tester
     # funs_to_test = [call_excel_write_log_cpt] # la fonction à tester
     # funs_to_test = [call_read_prg_log_to_excel] # la fonction à tester
     # funs_to_test = [call_read_prg_log_many]
-    funs_to_test = [call_read_prg_log_many_to_excel]
+    # funs_to_test = [call_read_prg_log_many_to_excel]
 
     # lancement des tests
     call_return = []

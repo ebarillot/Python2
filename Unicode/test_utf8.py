@@ -1,5 +1,18 @@
 ﻿# -*- coding: utf-8 -*-
 
+# Bases:
+# - str et unicode sont des types, pas des encodages
+# - en Python2 une str est une suite de bytes et encodée en ascii par defaut
+# - en Python3 une str est unicode et est encodée en utf-8 par defaut
+# - Deux fonctions essentielles:
+#       - s.decode(encodage):  str -> unicode
+#           transforme une str en une variable de type unicode en mémoire en décodant les bytes de la str en fonction
+#           de l'encodage indiqué
+#       - u.encode(encodage):  unicode -> str
+#           transforme une variable de type unicode en mémoire en une chaine de caractères encodée
+#           avec l'encodage indiqué
+#
+
 # u  = "réponse déjà préparée en euros (€)"
 # uu = u.decode('utf8')
 uu  = u"réponse déjà préparée en euros (€) : \/ ' ` ~ # ö ô"

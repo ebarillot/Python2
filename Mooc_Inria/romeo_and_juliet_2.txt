@@ -1,0 +1,5 @@
+1:6:39:Two households, both alike in dignity,
+2:8:40:In fair Verona, where we lay our scene,
+3:7:41:From ancient grudge break to new mutiny,
+4:7:45:Where civil blood makes civil hands unclean.
+4:28:165

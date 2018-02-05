@@ -1,4 +1,4 @@
-import os , time
+# -*- coding: utf-8 -*-
 
 # FONCTION RENVOYANT LE NOMBRE DE LIGNES D'UN FICHIER TEXTE
 def countLigne(fichier):

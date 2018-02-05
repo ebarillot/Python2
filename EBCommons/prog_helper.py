@@ -12,7 +12,7 @@ import logging
 import sys
 from os.path import basename
 
-import cx_Oracle
+# import cx_Oracle
 from typing import Any
 
 __author__ = 'Emmanuel Barillot'
@@ -80,10 +80,11 @@ def mngt_error(error):
     :return: rien
     """
     logging.error('Stack frame: ' + call_stack())
-    if isinstance(error, cx_Oracle.DatabaseError):
-        logging.error('DatabaseError: {}'.format(error))
-    else:
-        logging.error('Error: {}'.format(error))
+    # if isinstance(error, cx_Oracle.DatabaseError):
+    #     logging.error('DatabaseError: {}'.format(error))
+    # else:
+    #     logging.error('Error: {}'.format(error))
+    logging.error('Error: {}'.format(error))
 
 
 DEFAULT_LOG_FORMAT = "[%(asctime)s:%(levelname)-5s] %(message)s"

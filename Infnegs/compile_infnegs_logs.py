@@ -15,8 +15,10 @@ from openpyxl import Workbook as ExcelWorkbook
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.styles.named_styles import NamedStyle
 from openpyxl.utils import get_column_letter
-from typing import Iterable, List
+from typing import Iterable, List, Union, Dict, Any
+import json
 
+from EBCommons.json_helper import json_navigate
 from EBCommons.paths_and_files import filter_files_with_patterns_and_extensions
 from EBCommons.prog_helper import LocalError, get_fun_ref, log_exit, log_init, log_write
 
@@ -30,6 +32,11 @@ DEFAULT_LOG_ENCODING = r'iso-8859-15'
 
 
 class CompteurOne(object):
+    """
+    Contient les informations d'un compteur
+    """
+    __slots__ = ['_num', '_name', '_value']
+
     def __init__(self, num, name, value):
         # type: (int, unicode, int) -> None
         self._num = num
@@ -62,12 +69,38 @@ class CompteurOne(object):
         # type: () -> unicode
         return self.__unicode__()
 
+    def key(self):
+        return self._num
+
 
 class CompteursFichier(object):
-    def __init__(self, fichier, compteurs=None):
-        # type: (unicode, Iterable[CompteurOne]) -> None
+    """
+    Contient tous les compteurs associés à un nom de fichier log
+    """
+    __slots__ = ['_corresp', '_fichier', '_remettant', '_date_run', '_compteurs']
+
+    def __init__(self, fichier, remettant=None, compteurs=None, date_run=None):
+        # type: (unicode, unicode, List[CompteurOne]) -> None
         self._fichier = fichier
+        self._remettant = remettant
+        self._date_run = date_run
         self._compteurs = list(compteurs) if compteurs else list()  # type: List[CompteurOne]
+
+    def set_remettant(self, remettant):
+        # type: (unicode) -> None
+        self._remettant = remettant
+
+    def remettant(self):
+        # type: () -> unicode
+        return self._remettant
+
+    def set_date_run(self, date_run):
+        # type: (unicode) -> None
+        self._date_run = date_run
+
+    def date_run(self):
+        # type: () -> unicode
+        return self._date_run
 
     def fichier(self):
         # type: () -> unicode
@@ -85,7 +118,8 @@ class CompteursFichier(object):
     def print_compteurs(self):
         # type: () -> None
         """affichage des compteurs"""
-        log_write("Compteurs du fichier {}:".format(self._fichier.encode('utf8')), level=logging.DEBUG)
+        log_write("Compteurs du fichier {} - {} :".format(self._fichier.encode('utf8'), self._remettant),
+                  level=logging.DEBUG)
         for cpt in self._compteurs:
             log_write(cpt.__str__(), level=logging.DEBUG)
 
@@ -103,7 +137,7 @@ class CompteursFichier(object):
 
     @classmethod
     def normalize(cls, compteurs_fichier_list_in):
-        # type: (Iterable[CompteursFichier]) -> Iterable[CompteursFichier]
+        # type: (List[CompteursFichier]) -> List[CompteursFichier]
         """
         Normalise les séries de compteurs associés à un ensemble de fichiers
         Tous les fichiers auront artificiellement une valeur (éventuellement 0)
@@ -122,15 +156,165 @@ class CompteursFichier(object):
                 compteur_num += 1
                 compteur_value = compteurs_as_dict[compteur_name] if compteur_name in compteurs_as_dict.keys() else 0
                 compteurs_normalises_list += [CompteurOne(compteur_num, compteur_name, compteur_value)]
-            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier(), compteurs_normalises_list)]
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
+                                                            compteurs_fichier.remettant(),
+                                                            compteurs_normalises_list,
+                                                            compteurs_fichier.date_run())]
         return compteurs_fichier_list_out
 
     @classmethod
-    def to_json(cls, compteurs_fichier_list_in):
-        # type: (Iterable[CompteursFichier]) -> Iterable[CompteursFichier]
-        pass
+    def normalize_corresp(cls, compteurs_fichier_list_in, corresp=None):
+        # type: (List[CompteursFichier], CompteursCorrespondance) -> List[CompteursFichier]
+        """
+        Normalise les séries de compteurs associés à un ensemble de fichiers
+        Tous les fichiers auront artificiellement une valeur (éventuellement 0)
+        pour l'ensemble des compteurs présents dans tous les fichiers.
+        :param compteurs_fichier_list_in: collection de CompteursFichier
+        :param corresp: correspondances de compteurs
+        :return: une collection de CompteursFichier normalisée
+        """
+        if corresp is None:
+            return cls.normalize(compteurs_fichier_list_in)
+
+        compteurs_fichier_list_out = list()
+        corresp_compteurs_norm = corresp.get_compteurs_norm()
+        for compteurs_fichier in compteurs_fichier_list_in:
+            corresp_for_this_fichier = corresp.get_corresp_by_key(compteurs_fichier.fichier_log())
+            compteurs_normalises_dict = dict()
+            #  1ere passe pour créer la liste / réceptacle des compteurs normalisés pour un fichier donné
+            for compteur_name_norm in corresp_compteurs_norm.keys():
+                compteur_num = corresp_compteurs_norm[compteur_name_norm]
+                compteurs_normalises_dict[compteur_name_norm] = {"compteur_num"      : compteur_num,
+                                                                 "compteur_name_norm": compteur_name_norm,
+                                                                 "compteur_value"    : 0}
+            compteurs_du_fichier_as_dict = compteurs_fichier.get_compteurs_as_dict()
+            # 2eme passe pour attribuer une valeurs aux compteurs normalisés à partir du compteur réel trouvé
+            # dans le fichier log
+            # on contruit une liste de compteurs pour chaque fichier
+            # selon le type de fichier, la correspondance adéquate est utilisée.
+            # Chaque nom de compteur trouvé dans le fichier est alors traduit dans son nom normalisé issu de la
+            # correspondance
+            for compteur_name in compteurs_du_fichier_as_dict.keys():
+                if compteur_name in corresp_for_this_fichier.keys():
+                    # on met à jour la valeur du compteur normalisé
+                    compteur_name_norm = corresp_for_this_fichier[compteur_name]
+                    if compteur_name_norm is not None and compteur_name_norm != '':
+                        compteurs_normalises_dict[compteur_name_norm]["compteur_value"] = \
+                            compteurs_du_fichier_as_dict[compteur_name]
+
+            # on transforme la structure de la liste des compteurs liés à une fichier donné
+            compteurs_normalises_list = [CompteurOne(compteurs_normalises_dict[cpt]["compteur_num"],
+                                                     compteurs_normalises_dict[cpt]["compteur_name_norm"],
+                                                     compteurs_normalises_dict[cpt]["compteur_value"])
+                                         for cpt in compteurs_normalises_dict.keys()]
+            compteurs_normalises_list.sort(key=CompteurOne.key)
+            compteurs_fichier_list_out += [CompteursFichier(compteurs_fichier.fichier_log(),
+                                                            compteurs_fichier.remettant(),
+                                                            compteurs_normalises_list,
+                                                            compteurs_fichier.date_run())]
+        return compteurs_fichier_list_out
 
 
+class CompteursCorrespondance(object):
+    """
+    Contient une correspondance entre noms de compteurs. Une correspondance est donc un ensemble d'ensembles de
+    compteurs.
+    Une clé, c'es à dire un nom de correspondance est associé à chaque ensemble de compteur.
+    Un ensemble de compteurs correspond aux compteurs présents dans un fichier log (ou à un sous ensemble de ceux-ci)
+
+    A chaque nom d'un compteur présent dans un fichier log,
+    on associe un nouveau nom de compteur qui apparaitra dans le fichier de synthèse. Ca permet de générer une synthèse
+    des compteurs tout en gérant l'évolution des noms de compteurs au fil des évolutions des programmes de chargement.
+    """
+    __slots__ = ['_corresp']
+    # constantes pour la classe
+    _compteurs_normalises_key = 'compteurs normalisés'
+
+    def __init__(self, json_obj):
+        # type: (Dict[Any]) -> CompteursCorrespondance
+        self._corresp = json_obj
+
+    @classmethod
+    def init_from_file(cls, file_name):
+        # type: (unicode, unicode) -> CompteursCorrespondance
+        """
+        Construit une instance d'une correspondance de compteurs à partir d'un fichier de paramétrage
+        :param file_name: nom du fichier qui contient la correspondance entre les noms de compteurs
+        :return: la correspondance, en fait un dictionnaire de plusieurs correspondances vers un seul ensemble
+        de compteurs.
+        """
+        with open(file_name) as f:
+            json_obj = json.load(f)
+        cls._valid_json(json_obj)
+        return cls(json_obj=json_obj)  # appelle __init__()
+
+    @classmethod
+    def _valid_json(cls, corresp_json):
+        # type: (Dict[Any]) -> None
+        """
+        Valide le json qui contient les correspondances:
+        chaque compteur qui apparait dans une correspondance doit exister dans le dictionnaire des compteurs normalisés.
+        :return: None
+        """
+        compteurs_normalises = corresp_json[cls._compteurs_normalises_key].keys()
+        for corresp_key in corresp_json.keys():
+            if corresp_key != cls._compteurs_normalises_key:
+                for compteur_normalise in corresp_json[corresp_key].values():
+                    if compteur_normalise not in compteurs_normalises:
+                        raise Exception("compteur non référencé dans les compteurs normalisés: {}".format(compteur_normalise))
+
+    def _get_corresp_key(self, guess_corresp_key):
+        # type: (unicode) -> unicode
+        """
+        Retourne le nom de la correspondance dans le dictionnaire des correspondances.
+        la valeur de guess_corresp_key doit contenir le nom de la correspondance.
+        Ex: guess_corresp_key = 'chgInfnegs_2017-09-10.log'
+            key = 'chgInfnegs'
+        :param guess_corresp_key: nom de la correspondance à trouver
+        :return: la première clé trouvée dans le dictionnaire des correspondances
+        """
+        for the_key in self._corresp.keys():
+            if the_key in guess_corresp_key:  # on cherche la clé qui ressemble
+                return the_key
+
+    def get_corresp_compteur(self, compteur_name, guess_corresp_key):
+        # type: (unicode) -> unicode
+        """
+        Retourne la traduction / correspondance d'un compteur vers un autre nom de compteur normalisé
+        :param compteur_name: nom du compteur à traduire
+        :param guess_corresp_key: la clé de la correspondance à utiliser
+        :return: nom normalisé du compteur
+        """
+        return self._corresp[self._get_corresp_key(guess_corresp_key)][compteur_name]
+
+    def get_corresp_by_key(self, guess_corresp_key):
+        # type: (unicode) -> Dict
+        """
+        Retourne une correspondance à partir d'un nom qui contient une clé,
+         c'est un dictionnaire de noms de compteurs à traduire
+        :param guess_corresp_key: la clé de la correspondance à utiliser
+        :return: une correspondance
+        """
+        return self._corresp[self._get_corresp_key(guess_corresp_key)]
+
+    def get_corresp_compteur_names(self, guess_corresp_key):
+        # type: (unicode) -> List[unicode]
+        """
+        Retourne la liste des clés / noms des compteurs à traduire, associées à une correspondance
+        :param guess_corresp_key: nom de la correspondance à trouver
+        :return: liste de noms de compteurs
+        """
+        return self._corresp[self._get_corresp_key(guess_corresp_key)].keys()
+
+    def get_compteurs_norm(self):
+        # type: () -> Dict
+        """
+        :return: le dictionnaire des compteurs normalisés et de leur ordre
+        """
+        return self._corresp[self._compteurs_normalises_key]
+
+
+# TODO: en faire une méthode de CompteursFichier.set_from_file(filename)
 def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
     # type: (unicode, unicode) -> CompteursFichier
     """
@@ -143,19 +327,37 @@ def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
     :return: un tuple des compteurs trouvés
     """
 
+    def parse_date_run(the_line):
+        # type: (unicode) -> unicode or None
+        re_date_run = re.compile(r"(.*)\|(.*)\|(.*)\|(.*)\|(.*)")  # RE pour trouver la date
+        m_date_run = re_date_run.match(the_line)
+        if m_date_run is not None:
+            remettant = m_date_run.group(1)
+            return remettant
+        return None
+
+    def parse_remettant(the_line):
+        # type: (unicode) -> unicode or None
+        re_remettant = re.compile(r".*LOG\|supportcod .* : *(.*)")  # RE pour trouver ligne du remettant
+        m_remettant = re_remettant.match(the_line)
+        if m_remettant is not None:
+            remettant = m_remettant.group(1)
+            return remettant
+        return None
+
     def parse_nb_compteurs(the_line):
         # type: (unicode) -> int or None
         # re_nb_compteurs = re.compile(".*LOG\|\[(.*)\] Compteurs")
         re_nb_compteurs = re.compile(r".*LOG\|\[(.*)\] \w+$")  # RE pour trouver ligne du nb de compteur
         m_nb_compteurs = re_nb_compteurs.match(the_line)
         if m_nb_compteurs is not None:
-            nb_compteurs = m_nb_compteurs.group(1)
-            return int(nb_compteurs)
+            nb_compteurs_match = m_nb_compteurs.group(1)
+            return int(nb_compteurs_match)
         return None
 
     def parse_compteur(the_line):
         # type: (unicode) -> CompteurOne or None
-        re_compteur = re.compile(r".*LOG\|\[(.*)\] (.*) \.+ : *(\d*)")  # RE pour trouver les lignes des compteurs
+        re_compteur = re.compile(r".*LOG\|\[(.*)\] (.*) \.+ : *(-?\d*)")  # RE pour trouver les lignes des compteurs
         m_compteur = re_compteur.match(the_line)
         if m_compteur is not None:
             g1_compteur = m_compteur.group(1)  # numero du compteur
@@ -169,8 +371,18 @@ def read_prg_log(the_file_name, encoding=DEFAULT_LOG_ENCODING):
         # on lit ligne à ligne et on cherche dans chaque ligne
         #   le motif de la ligne qui contient le nb de compteurs
         #   ou le motif d'une ligne qui contient un compteur
+        # recherche de la date dans la 1ere ligne
+        date_run = parse_date_run(f.readline())
+        if date_run:
+            log_write(the_file_name + ", date_run: " + date_run)
+            compteurs_fichier.set_date_run(date_run)
         for line in f:
             line_decoded = line.decode(encoding)  # decodage de la ligne vers utf-8
+            # recherche de la ligne qui contient le remettant
+            remettant = parse_remettant(line_decoded)
+            if remettant:
+                log_write(the_file_name + ", remettant: " + remettant)
+                compteurs_fichier.set_remettant(remettant)
             # la ligne du nb de compteurs
             nb_compteurs = parse_nb_compteurs(line_decoded)
             if nb_compteurs:
@@ -201,18 +413,21 @@ def call_read_prg_log(dir_name, file_name):
         return False
 
 
-def read_prg_log_many(path_src, file_name_list, encoding=DEFAULT_LOG_ENCODING):
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
+def read_prg_log_many(path_src_file, file_name_list, encoding=DEFAULT_LOG_ENCODING):
     # type: (unicode, List[unicode], unicode) -> List[CompteursFichier]
     """
     Lit les lignes de compteurs d'une liste de fichiers log et les retourne dans une liste de CompteursFichier
 
-    :param path_src: chemin vers les fichiers à analyser
+    :param path_src_file: chemin vers les fichiers à analyser
     :param file_name_list: liste des noms des fichiers à analyser (tous dans le même répertoire path_src)
     :param encoding: encodage à utiliser pour lire les fichiers
     """
-    return map(lambda x: read_prg_log(x, encoding), [os.path.join(path_src, file_name) for file_name in file_name_list])
+    return map(lambda x: read_prg_log(x, encoding),
+               [os.path.join(path_src_file, file_name) for file_name in file_name_list])
 
 
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
 def call_read_prg_log_many(dir_name, re_file_name):
     # type: (unicode) -> bool
     """
@@ -234,14 +449,17 @@ def call_read_prg_log_many(dir_name, re_file_name):
         return False
 
 
-def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_fichiers_list=None):
-    # type: (unicode, CompteursFichier, Iterable[CompteursFichier]) -> None
+# TODO: en faire une méthode de CompteursFichier.to_excel_file(excel_filename)
+def excel_write_log_cpt(excel_file_full_name, corresp_file_name=None, compteurs_fichier=None,
+                        compteurs_fichiers_list=None):
+    # type: (unicode, unicode or None, CompteursFichier, Iterable[CompteursFichier]) -> None
     """
     Crée un fichier Excel à partir des compteurs d'un ou de plusieurs fichiers.
 
     :param excel_file_full_name: nom du fichier Excel en sortie, chemin compris
+    :param corresp_file_name: nom du fichier qui contient les correspondances
     :param compteurs_fichier: les compteurs d'un fichier
-    :param compteurs_fichiers_list: une liste compteurs de fichiers
+    :param compteurs_fichiers_list: une liste de compteurs de fichiers
     :return: None
     """
 
@@ -263,25 +481,31 @@ def excel_write_log_cpt(excel_file_full_name, compteurs_fichier=None, compteurs_
     # création d'une nouvelle feuille 1
     # feuil1 = workbook.create_sheet('Compteurs')
 
-    if compteurs_fichier is None and compteurs_fichiers_list is None:
-        raise Exception('Give either a row or a collection')
-    if compteurs_fichier is not None and compteurs_fichiers_list is not None:
-        raise Exception('Give either a row or a collection, not both')
+    if compteurs_fichiers_list is None:
+        if compteurs_fichier is None:
+            raise Exception('Give either a row or a collection')
+        else:
+            compteurs_fichiers_list = [compteurs_fichier]
 
-    compteurs_list = [compteurs_fichier] if compteurs_fichier is not None \
-        else CompteursFichier.normalize(compteurs_fichiers_list)  # type: Iterable[CompteursFichier]
+    if corresp_file_name is None:
+        compteurs_list = CompteursFichier.normalize(compteurs_fichiers_list)  # type: List[CompteursFichier]
+    else:
+        compteurs_list = CompteursFichier.normalize_corresp(compteurs_fichiers_list,
+                                                            CompteursCorrespondance.init_from_file(
+                                                                corresp_file_name))  # type: List[CompteursFichier]
 
     # ajout des en-têtes, à partir des libellés de la premiere ligne
     # ça suffit car les compteurs ont été normalisés
-    title_line = ['fichier'] + [compteur.name() for compteur in compteurs_list[0].compteurs()]
+    title_line = ['Fichier', 'Remettant', 'Date chargement'] + [compteur.name() for compteur in compteurs_list[0].compteurs()]
     feuil1.append(title_line)
 
     # ajout des valeurs dans les lignes suivantes
     for compteurs_fichier in compteurs_list:
-        next_line = [compteurs_fichier.fichier()] + [compteur.value() for compteur in compteurs_fichier.compteurs()]
+        next_line = [compteurs_fichier.fichier(),
+                     compteurs_fichier.remettant(),
+                     compteurs_fichier.date_run()] + \
+                    [str(compteur.value()) for compteur in compteurs_fichier.compteurs()]
         feuil1.append(next_line)
-
-    # map(lambda x: feuil1.append([x.fichier()] + [compteur.value() for compteur in x.compteurs()]), compteurs_list)
 
     # ajustement éventuel de la largeur de chaque colonne
     for i in range(feuil1.max_column):
@@ -315,6 +539,7 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
         #         , CompteurOne(3, 'cpt4', 8)]
         #     )
         compteurs_coll = [CompteursFichier('fichier_1'
+                                           , 'Remettant 1'
                                            , map(lambda x: CompteurOne(*x)
                                                  , [
                                                      (' 0', 'cpt1', 12)
@@ -325,6 +550,7 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
                                                  )
                                            )
             , CompteursFichier('fichier_2'
+                               , 'Remettant 2'
                                , map(lambda x: CompteurOne(*x)
                                      , [
                                          (' 0', 'cpt1', 13)
@@ -337,7 +563,7 @@ def call_excel_write_log_cpt(dir_name, excel_file_name):
                           ]
 
         # excel_write_log_cpt(file_name, compteurs_row=compteurs)
-        excel_write_log_cpt(file_name, compteurs_fichiers_list=compteurs_coll)
+        excel_write_log_cpt(file_name, corresp_file_name=None, compteurs_fichiers_list=compteurs_coll)
         return True
     except Exception as e:
         log_write(LocalError(e).__str__(), level=logging.ERROR)
@@ -365,7 +591,9 @@ def call_read_prg_log_to_excel(dir_name, file_name, excel_file_name):
         return False
 
 
-def call_read_prg_log_to_excel_many(path_src, file_name_re, encoding_src, path_dest, excel_file_name):
+# TODO: en faire une méthode de classe pour une collection de CompteursFichier
+def call_read_prg_log_to_excel_many(path_src, file_name_re, path_dest, excel_file_name,
+                                    corresp_file_name, encoding_src=DEFAULT_LOG_ENCODING):
     # type: (unicode, unicode, unicode, unicode, unicode) -> bool
     """
     Lit une liste de fichiers de logs et ecrit les compteurs extraits dans un fichier Excel
@@ -374,19 +602,20 @@ def call_read_prg_log_to_excel_many(path_src, file_name_re, encoding_src, path_d
     :param encoding_src: encodage des fichiers logs (par ex iso-8859-15 sous Linux)
     :param path_dest: répertoire de destination du fichier Excel
     :param excel_file_name: le nom du fichier Excel produit
+    :param corresp_file_name: nom du fichier des correspondances de compteurs
     :return: True si succès
     """
-
     file_name_re = PATTERN_INGNEGS_LOG if file_name_re is None else file_name_re
     # on recupere les noms de fichiers à traiter
     file_name_list = filter_files_with_patterns_and_extensions(os.listdir(path_src), include_patterns=(file_name_re,))
     try:
-        cpt_list = read_prg_log_many(path_src, file_name_list, DEFAULT_LOG_ENCODING)
+        cpt_list = read_prg_log_many(path_src, file_name_list, encoding_src)
         # affichage des compteurs
         if cpt_list:
             for cpt in cpt_list:
                 cpt.print_compteurs()
-            excel_write_log_cpt(os.path.join(path_dest, excel_file_name), compteurs_fichiers_list=cpt_list)
+            excel_write_log_cpt(os.path.join(path_dest, excel_file_name), corresp_file_name,
+                                compteurs_fichiers_list=cpt_list)
         return True
     except Exception as e:
         log_write(LocalError(e).__str__(), level=logging.ERROR)
@@ -397,8 +626,8 @@ def call_read_prg_log_to_excel_many(path_src, file_name_re, encoding_src, path_d
 #####################
 # programme principal
 #####################
-def launch(path_src, log_file_name, encoding_src, path_dest, excel_file_name):
-    # type: (unicode, unicode, unicode, unicode, unicode) -> list(bool)
+def launch(path_src, log_file_name, encoding_src, path_dest, excel_file_name, corresp_file_name):
+    # type: (unicode, unicode, unicode, unicode, unicode) -> List(bool)
     """
     Lance les fonctions pour test / validation
 
@@ -407,15 +636,17 @@ def launch(path_src, log_file_name, encoding_src, path_dest, excel_file_name):
     :param encoding_src: encodage des fichiers log
     :param path_dest: répertoire de destination pour le fichier Excel
     :param excel_file_name: nom du fichier Excel
+    :param corresp_file_name: nom du fichier des correspondances de compteurs
     :return: liste de bool
     """
     # liste de fonctions à tester
     dict_of_funs_to_test = {
-        r'call_read_prg_log': (path_src, log_file_name)
-        , r'call_excel_write_log_cpt': (path_src, excel_file_name)
-        , r'call_read_prg_log_to_excel': (path_src, log_file_name, path_dest, excel_file_name)
-        , r'call_read_prg_log_many': (path_src, PATTERN_INGNEGS_LOG)
-        , r'call_read_prg_log_to_excel_many': (path_src, PATTERN_INGNEGS_LOG, encoding_src, path_dest, excel_file_name)
+        r'call_read_prg_log'                : (path_src, log_file_name)
+        , r'call_excel_write_log_cpt'       : (path_src, excel_file_name)
+        , r'call_read_prg_log_to_excel'     : (path_src, log_file_name, path_dest, excel_file_name)
+        , r'call_read_prg_log_many'         : (path_src, PATTERN_INGNEGS_LOG)
+        , r'call_read_prg_log_to_excel_many': (
+            path_src, PATTERN_INGNEGS_LOG, path_dest, excel_file_name, corresp_file_name, encoding_src)
         }
 
     # liste des références des fonctions
@@ -465,8 +696,10 @@ if __name__ == "__main__":
     path_dest_for_excel = path_root
     one_log_file_name = "chgInfnegs_201610031669949.log"
     excel_out_filename = "compteurs.xlsx"
+    corresp_file_name = r'compteurs_correspondances.json'
 
-    res = launch(path_src, one_log_file_name, DEFAULT_LOG_ENCODING, path_dest_for_excel, excel_out_filename)
+    res = launch(path_src, one_log_file_name, DEFAULT_LOG_ENCODING, path_dest_for_excel, excel_out_filename,
+                 corresp_file_name)
     if res is not None:
         for elem in res:
             log_write("{}() => {}".format(unicode(elem[0]), unicode(elem[1])))

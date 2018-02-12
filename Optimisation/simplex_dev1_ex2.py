@@ -20,6 +20,6 @@ def solv_simplex(a):
     return _res
 
 
-for a in linspace(-4,+4,350,True):
+for a in linspace(-3,+3,1000,True):
     res=solv_simplex(a)
     print('a: {:3.3f},  fun: {:3.3f},  x: {}'.format(a, res['fun'], res['x']))

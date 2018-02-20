@@ -53,26 +53,23 @@ print(flavanoids_freq)
 
 # def moment_1(freq):
 #     mean = 0.
-#     nbtot = 0
 #     for value, nb in freq.dropna().iteritems():
 #         mean += np.double(nb)*value
-#         nbtot += nb
-#     return mean/np.double(nbtot)
+#     return mean
 
 
 # def moment_centre(freq,r):
 #     mean = moment_1(freq)
 #     moment_r = 0.
-#     nbtot = 0
 #     for value, nb in freq.dropna().iteritems():
 #         moment_r += np.double(nb)*(value-mean)**r
-#         nbtot += nb
-#     return moment_r/np.double(nbtot)
+#     return moment_r
 
 
 def moment_centre(freq, r=1):
-    freq_index = freq.dropna().index
-    freq_values = freq.dropna().values
+    freq_dropna = freq.dropna()
+    freq_index = freq_dropna.index
+    freq_values = freq_dropna.values
     freq_list = zip(freq_index, freq_values)
     moment_1 = reduce(lambda x, y: x + y, map(lambda (x, y): x * y, freq_list))
     if r == 1:
@@ -94,10 +91,45 @@ print(mom_1)
 mom_2 = reduce(lambda x,y: x+y, map((lambda (x,y): (x-mom_1)**2 *y), zip(flavanoids_freq.index,flavanoids_freq.values)))
 print(mom_2)
 
-alcohol_serie = Data['alcohol']
-alcohol_freq = alcohol_serie.value_counts()
+# (6). Calculez la moyenne conditionnelle et la variance conditionnelle de la variable alcohol
+#  sachant que la variable class vaut 0, 1 et 2. Interpretez les résultats.
 
-alcohol_mean_by_class = [(x,moment_centre(Data.loc[Data['class']==x,['class','alcohol']]['alcohol'].value_counts())) for x in Data['class'].unique()]
-alcohol_var_by_class = [(x, moment_centre(Data.loc[Data['class']==x,['class','alcohol']]['alcohol'].value_counts(),2)) for x in Data['class'].unique()]
+class_unique = Data['class'].unique()
+alcohol_distrib_by_class = dict([(x, Data.loc[Data['class']==x,['class','alcohol']]['alcohol'].value_counts()) for x in class_unique])
+alcohol_size_by_class = dict([(x, Data.loc[Data['class']==x,['class','alcohol']]['alcohol'].size) for x in class_unique])
+alcohol_freq_by_class = dict([(x, alcohol_distrib_by_class[x]/alcohol_size_by_class[x]) for x in class_unique])
+
+alcohol_mean_by_class = [(x,moment_centre(alcohol_distrib_by_class[x]/alcohol_size_by_class[x])) for x in class_unique]
+alcohol_var_by_class  = [(x, moment_centre(alcohol_distrib_by_class[x]/alcohol_size_by_class[x],2)) for x in class_unique]
 print(alcohol_mean_by_class)
 print(alcohol_var_by_class)
+
+# (8). Calculez les fréquences de la variable alcohol pour les intervalles (10.,12.5], (12.5,13.5] et (13.5,15.]
+#  sachant que la variable class vaut 0, 1 et 2. (La notation (a,b] signifie que l'intervalle est ouvert à gauche
+#  et fermé à droite)
+
+# Data[['class','alcohol']]
+# alcohol_serie_a = Data.loc[Data['alcohol']>10 & Data['alcohol']<=12.5, ['class','alcohol']]
+alcohol_serie_a = Data.loc[(Data['alcohol']>10)&(Data['alcohol']<=12.5), ['class','alcohol']]
+print(alcohol_serie_a)
+
+alcohol_serie_b = Data.loc[(Data['alcohol']>12.5)&(Data['alcohol']<=13.5), ['class','alcohol']]
+print(alcohol_serie_b)
+
+alcohol_serie_c = Data.loc[(Data['alcohol']>13.5)&(Data['alcohol']<=15), ['class','alcohol']]
+print(alcohol_serie_c)
+
+alcohol_a_distrib_by_class = dict([(x, alcohol_serie_a.loc[alcohol_serie_a['class']==x,['class','alcohol']]['alcohol'].value_counts()) for x in class_unique])
+alcohol_a_size_by_class = dict([(x, alcohol_serie_a.loc[alcohol_serie_a['class']==x,['class','alcohol']]['alcohol'].size) for x in class_unique])
+alcohol_a_freq_by_class = dict([(x, alcohol_a_distrib_by_class[x]/alcohol_a_size_by_class[x]) for x in class_unique])
+
+alcohol_b_distrib_by_class = dict([(x, alcohol_serie_b.loc[alcohol_serie_b['class']==x,['class','alcohol']]['alcohol'].value_counts()) for x in class_unique])
+alcohol_b_size_by_class = dict([(x, alcohol_serie_b.loc[alcohol_serie_b['class']==x,['class','alcohol']]['alcohol'].size) for x in class_unique])
+alcohol_b_freq_by_class = dict([(x, alcohol_b_distrib_by_class[x]/alcohol_b_size_by_class[x]) for x in class_unique])
+
+alcohol_c_distrib_by_class = dict([(x, alcohol_serie_c.loc[alcohol_serie_c['class']==x,['class','alcohol']]['alcohol'].value_counts()) for x in class_unique])
+alcohol_c_size_by_class = dict([(x, alcohol_serie_c.loc[alcohol_serie_c['class']==x,['class','alcohol']]['alcohol'].size) for x in class_unique])
+alcohol_c_freq_by_class = dict([(x, alcohol_c_distrib_by_class[x]/alcohol_c_size_by_class[x]) for x in class_unique])
+print(alcohol_a_freq_by_class)
+print(alcohol_b_freq_by_class)
+print(alcohol_c_freq_by_class)

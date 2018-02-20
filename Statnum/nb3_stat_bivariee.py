@@ -12,12 +12,14 @@ import matplotlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_wine
 from IPython.display import display, Math, Latex
 
-vins = load_wine()
-Data = pd.DataFrame(vins['data'],columns=vins['feature_names'])
-Data['class'] = vins['target']
+# from sklearn.datasets import load_wine
+# vins = load_wine()
+# Data = pd.DataFrame(vins['data'],columns=vins['feature_names'])
+# Data['class'] = vins['target']
+
+Data = pd.read_csv('vins.csv')
 
 # print(vins['DESCR'])
 print(Data.shape)
@@ -48,17 +50,45 @@ flavanoids_freq = flavanoids_serie.value_counts()
 print(flavanoids_freq)
 
 
-def moment_1(freq):
-    mean = 0.
-    for key, value in freq.dropna().iteritems():
-        mean += np.double(value)*key
-    return mean/freq.count()
+# def moment_1(freq):
+#     mean = 0.
+#     nbtot = 0
+#     for value, nb in freq.dropna().iteritems():
+#         mean += np.double(nb)*value
+#         nbtot += nb
+#     return mean/np.double(nbtot)
 
 
-def moment_centre(freq,r):
+# def moment_centre(freq,r):
+#     mean = moment_1(freq)
+#     moment_r = 0.
+#     nbtot = 0
+#     for value, nb in freq.dropna().iteritems():
+#         moment_r += np.double(nb)*(value-mean)**r
+#         nbtot += nb
+#     return moment_r/np.double(nbtot)
+
+
+def moment_centre(freq,r=1):
+    def moment_1(freq):
+        mean = 0.
+        nbtot = 0
+        for value, nb in freq.dropna().iteritems():
+            mean += np.double(nb) * value
+            nbtot += nb
+        return mean / np.double(nbtot)
+    mean = moment_1(freq)
+    if r == 1:
+        return mean
     mean = moment_1(freq)
     moment_r = 0.
-    for key, value in freq.dropna().iteritems():
-        moment_r += np.double(value)*(key-mean)**r
-    return moment_r/freq.count()
+    nbtot = 0
+    for value, nb in freq.dropna().iteritems():
+        moment_r += np.double(nb)*(value-mean)**r
+        nbtot += nb
+    return moment_r/np.double(nbtot)
 
+print('mean: {}'.format(flavanoids_serie.mean()))
+print('moment_1: {}'.format(moment_centre(flavanoids_freq)))
+print('var: {}'.format(flavanoids_serie.var(ddof=0)))
+print('moment_2: {}'.format(moment_centre(flavanoids_freq,2)))

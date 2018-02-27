@@ -224,6 +224,9 @@ Data2 = pd.DataFrame(Data[['class','alcohol']])
 Data2['alcohol'] = Data2['alcohol'].map(alcohol_interval)
 Data2.groupby(['class','alcohol']).size()
 alcohol_subserie_freq = Data2.groupby(['class','alcohol']).size() / len(Data2)
+alcohol_subserie_freq.rename('freq',inplace=True)
+type(alcohol_subserie_freq)
+alcohol_subserie_freq.name
 
 # df = pd.DataFrame([{'a': 15, 'b': 15, 'c': 5}, {'a': 20, 'b': 10, 'c': 7}, {'a': 25, 'b': 30, 'c': 9}])
 # df['a'] = df['a'].map(lambda a: a / 2.)
@@ -314,11 +317,11 @@ Data['nonflavanoid_phenols'].quantile(np.linspace(1. / float(m), 1., m))
 # alcohol et celle de la variable class. Qu'est-ce que vous en concluez ?
 
 alcohol_subserie_freq
+alcohol_subserie_freq.reset_index()
+alcohol_subserie_freq.reset_index().index
 
 # controle de la somme des fréquences
-for idx in alcohol_subserie_freq.keys():
-    print('filter {}, {} values, sum={}'.format(idx, len(alcohol_subserie_freq[idx]), alcohol_subserie_freq[idx].sum()))
-
+alcohol_subserie_freq.cumsum()
 
 
 # => variables indépendantes ?

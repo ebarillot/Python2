@@ -732,4 +732,227 @@ tGroupedStats.count()
 # Filtering
 # The Ƿlter method enables us to apply Ƿltering on a groupby object that results in
 # a subset of the initial object
+# The filter method enables us to apply filtering on a groupby object that results in
+# a subset of the initial object. Here, we illustrate how to display the months of the
+# season in which more than 100 goals were scored in each of the four leagues
+goalsScoredDF.groupby(level='Month').filter(lambda x: np.all([x[col] > 100 for col in goalsScoredDF.columns]))
+# Note the use of the np.all operator to ensure that the constraint is enforced for all the columns
 
+# Merging and joining
+# The concat function
+# The concat function is used to join multiple pandas' data structures along a specified
+# axis and possibly perform union or intersection operations along other axes
+# concat(objs, axis=0, , join='outer', join_axes=None, ignore_index=False,
+# keys=None, levels=None, names=None, verify_integrity=False)
+# The synopsis of the elements of concat function are as follows:
+# • The objs function: A list or dictionary of Series, DataFrame, or Panel objects
+# to be concatenated.
+# • The axis function: The axis along which the concatenation should be
+# performed. 0 is the default value.
+# • The join function: The type of join to perform when handling indexes on
+# other axes. The 'outer' function is the default.
+# • The join_axes function: This is used to specify exact indexes for the
+# remaining indexes instead of doing outer/inner join.
+# • The keys function: This specifies a list of keys to be used to construct
+# a MultiIndex.
+import os
+if os.path.basename(os.getcwd()) != 'Pandas':
+    os.chdir('./Pandas')
+print(os.getcwd())
+stockDataDF = pd.read_csv('data/tech_stockprices.csv').set_index(['Symbol']);stockDataDF
+# A=stockDataDF.ix[:4, ['Closing price', 'EPS']]; A # syntaxe .ix obsolète remplacée par la ligne suivante:
+A = stockDataDF.loc[stockDataDF.index[:4], ['Closing price', 'EPS']]; A   # avec loc
+A = stockDataDF.iloc[:4, stockDataDF.columns.get_indexer(['Closing price', 'EPS'])]; A    # avec iloc
+
+# B = stockDataDF.ix[2:-2, ['P/E']];B   # .ix deprecated
+B = stockDataDF.iloc[2:-2, stockDataDF.columns.get_indexer(['P/E'])]; B    # avec iloc
+
+# C=stockDataDF.ix[1:5, ['Market Cap(B)']];C
+C = stockDataDF.iloc[1:5, stockDataDF.columns.get_indexer(['Market Cap(B)'])]; C    # avec iloc
+
+# Here, we perform a concatenation by specifying an outer join, which concatenates
+# and performs a union on all the three data frames, and includes entries that do not
+# have values for all the columns by inserting NaN for such columns:
+pd.concat([A,B,C],axis=1) # outer join
+
+# We can also specify an inner join that does the concatenation, but only includes rows
+# that contain values for all the columns in the final data frame by throwing out rows
+# with missing columns, that is, it takes the intersection:
+pd.concat([A,B,C],axis=1, join='inner') # Inner join ==> pas de NaN dans le DF résultat
+
+
+# The third case enables us to use the specific index from the original DataFrame to join on:
+#  est-ce que ça veut dire que les A,B,C sont des vues et non des copies sur stockDataDF ?
+#  ainsi elle partagent bien les index ?
+np.shares_memory(stockDataDF,A) # ==> répond false pourtant ... donc A,B,C seraient indépendantes en mémoire
+np.shares_memory(stockDataDF.index,A.index) # répond True: les index seraient partagés
+pd.concat([A,B,C], axis=1, join_axes=[stockDataDF.index])
+A.index
+A.index
+
+np.random.seed(100)
+normDF=pd.DataFrame(np.random.randn(3,4));normDF
+binomDF=pd.DataFrame(np.random.binomial(100,0.5,(3,4)));binomDF
+poissonDF=pd.DataFrame(np.random.poisson(100,(3,4)));poissonDF
+rand_distribs=[normDF,binomDF,poissonDF]
+rand_distribsDF=pd.concat(rand_distribs,keys=['Normal','Binomial', 'Poisson']);rand_distribsDF
+
+
+# Using append
+# The append function is a simpler version of concat that concatenates along axis=0
+stockDataA=stockDataDF.iloc[:2,:3]
+stockDataA
+stockDataB=stockDataDF[2:]
+stockDataB
+stockDataA.append(stockDataB)
+
+# In order to maintain the order of columns similar to the original DataFrame, we can
+# apply the reindex function
+stockDataA.append(stockDataB).reindex(stockDataDF.columns,axis=1)
+# The append function does not work in places, but it returns a new DataFrame with the second DataFrame
+# appended to the first
+
+# Appending a single row to a DataFrame
+algos = {'search'          : ['DFS', 'BFS', 'Binary Search', 'Linear'],
+         'sorting'         : ['Quicksort', 'Mergesort', 'Heapsort', 'Bubble Sort'],
+         'machine learning': ['RandomForest', 'K Nearest Neighbor', 'Logistic Regression', 'K-Means Clustering']}
+algoDF = pd.DataFrame(algos);
+algoDF
+moreAlgos = {'search'          : 'ShortestPath', 'sorting': 'Insertion Sort',
+             'machine learning': 'Linear Regression'}
+algoDF.append(moreAlgos,ignore_index=True)
+# In order for this to work, you must pass the ignore_index=True argument so that the index [0,1,2,3] in algoDF is ignored.
+
+
+# SQL-like merging/joining of DataFrame objects
+# The merge function is used to obtain joins of two DataFrame objects similar to those
+# used in SQL database queries. The DataFrame objects are analogous to SQL tables
+# merge(left, right, how='inner', on=None, left_on=None,
+#     right_on=None, left_index=False, right_index=False,
+#     sort=True, suffixes=('_x', '_y'), copy=True)
+# Following is the synopsis of merge function:
+# • The left argument: This is the first DataFrame object
+# • The right argument: This is the second DataFrame object
+# • The how argument: This is the type of join and can be inner, outer, left, or
+# right. The default is inner.
+# • The on argument: This shows the names of columns to join on as join keys.
+# • The left_on and right_on arguments : This shows the left and right
+# DataFrame column names to join on.
+# • The left_index and right_index arguments: This has a Boolean value. If
+# this is True, use the left or right DataFrame index/row labels to join on.
+# • The sort argument: This has a Boolean value. The default True setting
+# results in a lexicographical sorting. Setting the default value to False may
+# improve performance.
+# • The suffixes argument: The tuple of string suffixes to be applied to
+# overlapping columns. The defaults are '_x' and '_y'.
+# • The copy argument: The default True value causes data to be copied from
+# the passed DataFrame objects.
+import os
+if os.path.basename(os.getcwd()) != 'Pandas':
+    os.chdir('./Pandas')
+print(os.getcwd())
+USIndexDataDF = pd.read_csv('data/us_index_data.csv');USIndexDataDF
+slice1=USIndexDataDF.iloc[:2,:3]
+slice1
+slice2=USIndexDataDF.iloc[:2,[0,3,4]]
+slice2
+slice3=USIndexDataDF.iloc[[1,2],:3]
+slice3
+pd.merge(slice1,slice2)
+pd.merge(slice3,slice2,how='inner')
+pd.merge(slice3,slice2,how='outer')
+pd.merge(slice3,slice2,how='left')
+pd.merge(slice3,slice2,how='right')
+
+
+# The join function
+# The DataFrame.join function is used to combine two DataFrames that have
+# different columns with nothing in common. Essentially, this does a longitudinal
+# join of two DataFrames
+slice_NASD_SP=USIndexDataDF.iloc[:4,:3]
+slice_NASD_SP
+slice_Russ_DJIA=USIndexDataDF.iloc[:4,3:]
+slice_Russ_DJIA
+slice_NASD_SP.join(slice_Russ_DJIA)
+slice1.join(slice2) # ValueError: columns overlap but no suffix specified: Index([u'TradingDate'], dtype='object')
+
+
+# Pivots and reshaping data
+# This section deals with how you can reshape data. Sometimes, data is stored in
+# what is known as the stacked format
+import os
+if os.path.basename(os.getcwd()) != 'Pandas':
+    os.chdir('./Pandas')
+print(os.getcwd())
+plantGrowthRawDF = pd.read_csv('data/PlantGrowth.csv');plantGrowthRawDF
+plantGrowthRawDF[plantGrowthRawDF['group']=='ctrl']
+plantGrowthRawDF.pivot(index='observation',columns='group',values='weight')
+pd.pivot_table(plantGrowthRawDF,values='weight',index='observation', columns=['group'])
+pd.pivot_table(plantGrowthRawDF,values='weight',columns=['group'],aggfunc=np.mean)
+
+# autre exemple tiré de la doc python
+df = pd.DataFrame({"A": ["foo", "foo", "foo", "foo", "foo",
+                         "bar", "bar", "bar", "bar"],
+                   "B": ["one", "one", "one", "two", "two",
+                         "one", "one", "two", "two"],
+                   "C": ["small", "large", "large", "small",
+                         "small", "large", "small", "small",
+                         "large"],
+                   "D": [1, 2, 2, 3, 3, 4, 5, 6, 7]})
+df
+table = pd.pivot_table(df, values='D', index=['A', 'B'],
+                       columns=['C'], aggfunc=np.sum)
+table
+
+
+# Stacking and unstacking
+# In addition to the pivot functions, the stack and unstack functions are also available
+# on Series and DataFrames, that work on objects containing MultiIndexes
+
+# The stack() function
+# First, we set the group and observation column values to be the components of the
+# row index respectively, which results in a MultiIndex:
+plantGrowthStackedDF=plantGrowthRawDF.set_index(['group','observation'])
+plantGrowthStackedDF
+
+# Here, we see that the row index consists of a MultiIndex on the group and
+# observation with the weight column as the data value. Now, let us see what
+# happens if we apply unstack to the group level:
+plantGrowthStackedDF.unstack(level='group')
+# The following call is equivalent to the preceding one:
+plantGrowthStackedDF.unstack(level=0)
+plantGrowthStackedDF.index
+plantGrowthStackedDF.columns
+
+# The unstacking operation removes the group from the row index, changing it into a
+# single-level index:
+plantGrowthStackedDF.unstack(level='group').index
+# The MultiIndex is now on the columns:
+plantGrowthStackedDF.unstack(level='group').columns
+
+plantGrowthStackedDF.unstack(level=0).stack('group')
+plantGrowthStackedDF.unstack()
+
+# The stack() function by default sets the stacked level as the lowest level in the
+# resulting MultiIndex on the rows:
+plantGrowthStackedDF.unstack().stack()
+
+# Using the melt function
+# The melt function enables us to transform a DataFrame by designating some of
+# its columns as ID columns. This ensures that they will always stay as columns after
+# any pivoting transformations. The remaining non-ID columns can be treated as
+# variable and can be pivoted and become part of a name-value two column scheme.
+# ID columns uniquely identify a row in the DataFrame
+# The names of those non-ID columns can be customized by supplying the var_name
+# and value_name parameters. The use of melt is perhaps best illustrated by an
+# example, as follows:
+USIndexDataDF[:2]
+pd.melt(USIndexDataDF[:2], id_vars=['TradingDate'], var_name='Index Name', value_name='Index Value')
+
+# The pandas.get_dummies() function
+# This function is used to convert a categorical variable into an indicator DataFrame,
+# which is essentially a truth table of possible values of the categorical variable. An
+# example of this is the following command:
+melted=pd.melt(USIndexDataDF[:2], id_vars=['TradingDate'], var_name='Index Name', value_name='Index Value')
+melted
+pd.get_dummies(melted['Index Name'])

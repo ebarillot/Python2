@@ -12,14 +12,49 @@ def f(y1, y2):
     return np.minimum(np.minimum(Z1,Z2),Z3)
 
 
-def Z0(y1, y2):
-    return y1 * y2 * 0
+# calcul et affichage de f()
+xf, yf = np.mgrid[-5.:5.05:0.05, -5.:5.05:0.05]
+zf = f(xf, yf)
+sf = mlab.surf(xf, yf, zf, colormap='copper')
+# sf = mlab.surf(xf, yf, zf, warp_scale="auto", colormap='copper')  # voir à quoi sert warp_scale="auto"
+
+print(xf.min(), xf.max())
+print(yf.min(), yf.max())
+print(zf.min(), zf.max())
+
+eng = mlab.get_engine()
+fig = mlab.gcf(engine=eng)
+mlab.axes(figure=fig,
+          color=(.7, .7, .7),
+          xlabel='', ylabel='',
+          zlabel='$J(y)$',
+          x_axis_visibility=True, y_axis_visibility=True, z_axis_visibility=True)
+# fig_extent = (-7, 7, -5, 5, -10, 10)
+# extent = fig_extent,
+# ranges = (-7, 7, -5, 5, -5, 5),
+# mlab.scalarbar()
+# mlab.orientation_axes(figure=fig)
 
 
-x, y = np.mgrid[-7.:7.05:0.1, -5.:5.05:0.05]
-s = mlab.surf(x, y, f)
-s0 = mlab.surf(x, y, Z0)
-# mlab.axes(extent=[-10,10,-10,10,-10,10],x_axis_visibility=True,y_axis_visibility=True,z_axis_visibility=True)
-mlab.outline()
-mlab.axes()
+
+# from mayavi.filters.cut_plane import CutPlane
+# warp_scalar = eng.scenes[0].children[0].children[0]
+# warp_scalar.children[1:2] = []
+# cut_plane1 = CutPlane()
+# eng.add_filter(cut_plane1, warp_scalar)
+
+# calcul et affichage des plans
+Rmax = 5.
+drplane, dphi = Rmax / 250.0, np.pi / 250.0
+[rplane, phi] = np.mgrid[0:Rmax:drplane, 0:2.*np.pi+dphi*1.5:dphi]
+xplane = rplane * np.cos(phi)
+yplane = rplane * np.sin(phi)
+z0plane = 0.* xplane * yplane
+
+sz = mlab.mesh(xplane, yplane, z0plane, colormap='black-white', opacity=1.0)
+sy = mlab.mesh(xplane, z0plane, yplane, colormap='black-white', opacity=0.9)
+sx = mlab.mesh(z0plane, xplane, yplane, colormap='black-white', opacity=0.9)
+
+mlab.outline(figure=fig, extent=(-Rmax, Rmax, -Rmax, Rmax, -Rmax, Rmax))
+
 mlab.show()

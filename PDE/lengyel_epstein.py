@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # matplotlib inline
 
 # parametres du modele de Lengyel-Epstein
-a = 9.
+a = 9.4
 b = 0.14
 sig = 50.
 d = 1.07

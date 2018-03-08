@@ -319,7 +319,55 @@ alcohol_subserie_freq
 for idx in alcohol_subserie_freq.keys():
     print('filter {}, {} values, sum={}'.format(idx, len(alcohol_subserie_freq[idx]), alcohol_subserie_freq[idx].sum()))
 
+alcohol_subserie_freq.keys()
+alcohol_subserie_freq.values
+alcohol_subserie_freq.unstack().values
 
 
 # => variables indépendantes ?
 
+# (12). Ecrivez une fonction scatter_matrix qui trace les nuages de points de toutes les variables du
+# tableau de données passé à la fonction en argument, où les graphiques sont organisés en forme de matrice
+#  (c'est à dire que le nuage de points des variables i et j se trouve sur la ième ligne et la jème ligne
+#  dans la fenêtre). Appliquez cette fonction à votre tableau de données et comparez votre résultat à la
+#  matrice de corrélations.
+
+def scatter_matrix(dframe):
+    plt.figure(figsize=(8,6))
+    nvar = dframe.shape[1]
+    plt.suptitle('QQ-plots')
+    iplot = 0
+    ixplot = 0
+    iyplot = 0
+    for ix in dframe.columns.values:
+        ixplot += 1
+        for iy in dframe.columns.values:
+            iyplot += 1
+            iplot += 1
+            plt.subplot(nvar,nvar,iplot)
+            if ixplot == 1:
+                plt.xlabel(ix,)
+            if iyplot == 1:
+                plt.ylabel(iy)
+            plt.subplots_adjust(left=0.2, hspace=0.8, wspace=0.8, top=0.8)
+            qqplot((dframe[ix] - dframe[ix].mean()) / dframe[ix].std(),
+                   (dframe[iy] - dframe[iy].mean()) / dframe[iy].std())
+    plt.show()
+
+Data.columns.values
+scatter_matrix(Data[['flavanoids','total_phenols']])
+
+scatter_matrix(Data[['flavanoids','total_phenols','nonflavanoid_phenols']])
+
+Data[['flavanoids','total_phenols']].shape[1]
+Data[['flavanoids','total_phenols']]
+Data.columns.values
+
+
+plt.figure()
+iplot = 0
+nvar = 2
+for ix in range(1, nvar + 1):
+    for iy in range(1, nvar + 1):
+        iplot += 1
+        plt.subplot(nvar, nvar, iplot)

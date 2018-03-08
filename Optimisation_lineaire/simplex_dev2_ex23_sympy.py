@@ -6,27 +6,26 @@ import sympy as sp
 
 # solution numérique
 from scipy.optimize import linprog
-c = [-x for x in  [-1, 0, 0, 0]]        # attention, linprog cherche à minimiser et non as à maximiser
-A = [[-1,2,-1,2],[-1,2,-3,1],[-1,-1,1,-2]]
-b = [4,-5,-1]
-x0_bnds = (0, None)
+c = [-x for x in  [ 1., -1., 1.]]        # attention, linprog cherche à minimiser et non as à maximiser
+A = [[2.,-1.,2.],[2.,-3.,1.],[-1.,1.,-2.]]
+b = [4.,-5.,-1.]
 x1_bnds = (0, None)
 x2_bnds = (0, None)
 x3_bnds = (0, None)
-res = linprog(c, A, b, bounds=(x0_bnds, x1_bnds, x2_bnds, x3_bnds))
+res = linprog(c, A, b, bounds=(x1_bnds, x2_bnds, x3_bnds))
 print(res)
 
 
 # solution sympy
 sp.init_printing(use_unicode=True)
 
-x0, x1, x2, x3, x4, x5, x6 = sp.symbols('x0 x1 x2 x3 x4 x5 x6')
+x1, x2, x3, x4, x5, x6 = sp.symbols('x1 x2 x3 x4 x5 x6')
 
 M = sp.Matrix(A)
 print('M: ', end='')
 print(M)
 
-V = sp.Matrix(4,1,[x0,x1,x2,x3])
+V = sp.Matrix(3,1,[x1,x2,x3])
 print('V: ', end='')
 print(V)
 
@@ -34,29 +33,30 @@ b = sp.Matrix(b).transpose()
 print('b: ', end='')
 print(b)
 
-r1 = sp.Matrix([-1 ,  2 , -1 ,  2 ,  1 ,  0 ,  0 ,  4]).transpose()
-r2 = sp.Matrix([-1 ,  2 , -3 ,  1 ,  0 ,  1 ,  0 , -5]).transpose()
-r3 = sp.Matrix([-1 , -1 ,  1 , -2 ,  0 ,  0 ,  1 , -1]).transpose()
-r4 = sp.Matrix([-1 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0 ,  0]).transpose()
-s0p1 = sp.Matrix([5, 0, 0, 0, 9, 0, 4]).transpose()
+r1 = sp.Matrix([  2 , -1 ,  2 ,  1 ,  0 ,  0 ,  4]).transpose()
+r2 = sp.Matrix([  2 , -3 ,  1 ,  0 ,  1 ,  0 , -5]).transpose()
+r3 = sp.Matrix([ -1 ,  1 , -2 ,  0 ,  0 ,  1 , -1]).transpose()
+r4 = sp.Matrix([  1 , -1 ,  1 ,  0 ,  0 ,  0 ,  0]).transpose()
+s0p1 = sp.Matrix([0, sp.Rational(11,5), sp.Rational(8,5), 0, 0, 0]).transpose()
 sp.latex(s0p1.dot(r1[:-1]))
 sp.latex(s0p1.dot(r2[:-1]))
 sp.latex(s0p1.dot(r3[:-1]))
 
 
-r1p1 = r1 - r2
-r2p1 = -r2
-r3p1 = r3-r2
-r4p1 = r4-r2
+r1p1 = r1/2
+r2p1 = r2-r1
+r3p1 = r3+r1/2
+r4p1 = r4-r1/2
 sp.latex(r1p1)
 sp.latex(r2p1)
 sp.latex(r3p1)
 sp.latex(r4p1)
 
-r1p2 = (2*r1p1 - r3p1)/2
-r2p2 = (4*r2p1-3*r3p1)/4
-r3p2 = r3p1/4
-r4p2 = 4*r4p1-3*r3p1
+
+r1p2 = r1p1
+r2p2 = r2p1 + r1p1
+r3p2 = r3p1 + r1p1
+r4p2 = r4p1
 sp.latex(r1p2)
 sp.latex(r2p2)
 sp.latex(r3p2)

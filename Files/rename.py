@@ -1,14 +1,17 @@
 # coding=utf-8
 
 from __future__ import print_function, unicode_literals
-import logging
 import os
-import psutil
-from operator import itemgetter
+from string import maketrans   # Required to call maketrans function
 
-ficpath="f:/Musique/Litterature/AndreBreton-Nadja/AndreBreton-Nadja_D1"
+intab = " "
+outtab = "_"
+trantab = maketrans(intab, outtab)
+
+ficpath=b"C:\Users\emmanuel_barillot\Documents\Work\TEMP"
+os.chdir(ficpath)
 
 for fic in os.listdir(ficpath):
-    newname='1-{}'.format(fic)
+    newname='1-{}'.format(fic.translate(trantab))
     print('{} -> {}'.format(fic,newname))
     os.rename(fic,newname)

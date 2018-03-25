@@ -73,6 +73,7 @@ def print_proc_rsrc():
         # log_write('create_time: {}'.format(p.create_time()))  # return cached value
         # log_write('memory use: {}'.format(p.memory_info()[3]/1024))
 
+
 if __name__ == "__main__":
     # log_init(level=logging.DEBUG)
     log_init(level=logging.INFO)

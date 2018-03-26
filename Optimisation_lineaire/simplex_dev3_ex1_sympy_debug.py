@@ -35,11 +35,10 @@ print(xBbase)
 M.dot(xBbase)
 
 
-def base_is_optimale(_M, _b, _cT, _InB):
-    _nInB = M.shape[0]
-    _nOuB = M.shape[1]
-    _nvars = nInB + nOuB
-    _A = M.row_join(sp.eye(_nInB))
+def base_is_optimale(_A, _b, _cT, _InB):
+    _nInB = _A.shape[0]
+    _nvars = _A.shape[1]
+    _nOuB = _nvars - _nInB
     _A_col_ind = set([_i + 1 for _i in range(_nvars)])
     _cT = _cT.row_join(sp.Matrix(1, _nvars - len(_cT), [0] * (_nvars - len(_cT))))  # on complète le vecteur avec des 0
     assert (_cT.shape[1] == _nvars)
@@ -52,15 +51,18 @@ def base_is_optimale(_M, _b, _cT, _InB):
     _detB = _B.det()
     _sol = dict()
     if _detB == 0:
+        _sol['A'] = _A
+        _sol['b'] = _b
         _sol['InB'] = _InB
         _sol['ret'] = 'Base de rang < {}, impossible de calculer l\'inverse de B'.format(_nInB)
     else:
         _Binv = _B.inv()
         assert (_Binv * _B == sp.eye(_nInB))
         _Binv_N = _Binv * _N
+        _Binv_b = _Binv * _b
         #  solution de base
-        _xBsol = _Binv * b
-        _xNsol = sp.Matrix(_nOuB, 1, [0] * _nOuB)
+        _xBsol = _Binv_b
+        _xNsol = sp.Matrix(_nOuB, 1, [0] * _nOuB)   # que des 0
         assert (_xBsol.shape[0] == _nInB)
         assert (_xNsol.shape[0] == _nOuB)
         _cTN = sp.Matrix(1, _nOuB, [_cT[_i - 1] for _i in _OuB])
@@ -68,7 +70,7 @@ def base_is_optimale(_M, _b, _cT, _InB):
         assert (_cTN.shape[1] == _nOuB)
         assert (_cTB.shape[1] == _nInB)
         _dTN = _cTN - _cTB * _Binv_N
-        _dTB = sp.Matrix(_nInB, 1, [0] * _nInB)
+        _dTB = sp.Matrix(_nInB, 1, [0] * _nInB) # que des 0
         #  la solution complète
         _temp_xsol = list([None] * _nvars)
         _temp_cT = list([None] * _nvars)
@@ -94,6 +96,8 @@ def base_is_optimale(_M, _b, _cT, _InB):
         assert (_dT.shape[0] == 1)
         assert (_dT.shape[1] == _nvars)
         _fun = _cT * _xsol
+        _sol['A'] = _A
+        _sol['b'] = _b
         _sol['InB'] = _InB
         _sol['OuB'] = _OuB
         _sol['cT'] = _cT
@@ -101,8 +105,10 @@ def base_is_optimale(_M, _b, _cT, _InB):
         _sol['xsol'] = _xsol
         _sol['Binv'] = _Binv
         _sol['detB'] = _detB
+        _sol['Binvb'] = _Binv_b
         _sol['BinvN'] = _Binv_N
         _sol['fun'] = _fun
+        _sol['real'] = all([_x >= 0 for _x in _xsol[:, 0]])
         _sol['ret'] = 'OK'
     return _sol
 
@@ -129,27 +135,13 @@ solution_numerique()
 
 sol = list()
 # xBbase = sp.Matrix(3, 1, [0, 0, 0])
-sol.append(base_is_optimale(_M=M,
-                            _b=b,
-                            _cT=cT,
-                            _InB=[2, 4, 5, 6]))
-#  solution déduite
-# _xB = _xBbase - _Binv_N * _xN
 
-sol.append(base_is_optimale(_M=M,
-                            _b=b,
-                            _cT=cT,
-                            _InB=[2, 4, 5, 7]))
-
-sol.append(base_is_optimale(_M=M,
-                            _b=b,
-                            _cT=cT,
-                            _InB=[2, 4, 6, 7]))
-
-sol.append(base_is_optimale(_M=M,
-                            _b=b,
-                            _cT=cT,
-                            _InB=[2, 5, 6, 7]))
+# matrice de départ complète
+A = M.row_join(sp.eye(M.shape[0]))
+sol.append(base_is_optimale(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 6]))
+sol.append(base_is_optimale(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 7]))
+sol.append(base_is_optimale(_A=A, _b=b, _cT=cT, _InB=[2, 4, 6, 7]))
+sol.append(base_is_optimale(_A=A, _b=b, _cT=cT, _InB=[2, 5, 6, 7]))
 
 for _i in range(len(sol)):
     print('-------------')
@@ -157,14 +149,15 @@ for _i in range(len(sol)):
     for _k in sol[_i].keys():
         print('{}: {}'.format(_k, sol[_i][_k]))
 
-
-
+# la solution réalisable trouvée est: soldual[5]
+sol_real = [_x for _x in sol if _x['real']]
 
 
 
 
 #  problème dual
 Mdual = -M.transpose()
+Mdual.shape
 print(Mdual)
 nInBdual = Mdual.shape[0]
 nOuBdual = Mdual.shape[1]
@@ -191,9 +184,6 @@ print('Vdual: ' + sp.latex(Vdual))
 print('bdual: ' + sp.latex(bdual))
 print('systMdual: ' + sp.latex(Mdual * Vdual[:Mdual.shape[1], :] - bdual))
 
-# une solution de départ réalisable
-Mdual * sp.Matrix(4, 1, [0, 1, 0, 1])
-bdual
 
 # # recherche base réalisable de départ
 # soldual = list()
@@ -212,13 +202,51 @@ bdual
 # #  cette base conduit à une solution non réalisable (0, 8, 0, 12, -1, 3, 0) et qui ne conduit pas à x_2 = 6
 
 soldual = list()
-soldual.append(base_is_optimale(_M=Mdual,
-                                _b=bdual,
-                                _cT=cTdual,
-                                _InB=[1, 2, 3, 4]))
+# matrice de départ complète
+Adual = list()
+Adual.append([])
+Adual[0] = Mdual.row_join(sp.eye(Mdual.shape[0]))
+
+# une solution de départ réalisable (vérifiée)
+Mdual * sp.Matrix(4, 1, [0, 1, 0, 1])
+# comme les variables non nulles sont les colonnes 2 et 4, on va essayer
+# toutes les combinaisons avec ces deux colonnes en base pour trouver laquelle convient
+soldual.append(base_is_optimale(_A=Adual[0], _b=bdual, _cT=cTdual, _InB=[1, 2, 4]))
+soldual.append(base_is_optimale(_A=Adual[0], _b=bdual, _cT=cTdual, _InB=[2, 3, 4]))
+soldual.append(base_is_optimale(_A=Adual[0], _b=bdual, _cT=cTdual, _InB=[2, 4, 5]))
+soldual.append(base_is_optimale(_A=Adual[0], _b=bdual, _cT=cTdual, _InB=[2, 4, 6]))
+soldual.append(base_is_optimale(_A=Adual[0], _b=bdual, _cT=cTdual, _InB=[2, 4, 7]))
 
 for _i in range(len(soldual)):
     print('-------------')
     print('solution: {}'.format(_i+1))
     for _k in soldual[_i].keys():
         print('{}: {}'.format(_k, soldual[_i][_k]))
+
+
+# la solution réalisable trouvée est: soldual[5]
+soldual_real = [_x for _x in soldual if _x['real']]
+
+soldual_real[0]['A']
+soldual_real[0]['BinvN']
+soldual_real[0]['InB']
+soldual_real[0]['OuB']
+soldual_real[0]['Binvb']
+soldual_real[0]['xsol'][[_i-1 for _i in soldual_real[0]['InB']], :]
+
+# construction de la nouvelle matrice A
+Adual.append([])
+Adual[1] = sp.Matrix(3, 7, [0] * 21)
+for _i in range(len(soldual_real[0]['OuB'])):
+    Adual[1][:, soldual_real[0]['OuB'][_i]-1] = soldual_real[0]['BinvN'][:, _i]
+
+for _i in range(len(soldual_real[0]['InB'])):
+    Adual[1][:, soldual_real[0]['InB'][_i]-1] = sp.eye(len(soldual_real[0]['InB']))[:, _i]
+
+soldual_real[0]['dT'] # faire entrer 7 et sortit ???
+soldual.append(base_is_optimale(_A=Adual[1], _b=bdual, _cT=cTdual, _InB=[2, 4, 7]))
+
+
+# choix des nouvelles variables en base
+# à partir du choix du pivot: dTN
+

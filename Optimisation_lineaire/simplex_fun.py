@@ -21,15 +21,15 @@ def simplex_step(_A, _b, _cT, _InB):
     _nInB = _A.shape[0]
     _nvars = _A.shape[1]
     _nOuB = _nvars - _nInB
-    _A_col_ind = set([_i + 1 for _i in range(_nvars)])
+    _A_col_ind = set(range(_nvars))
     _cT = _cT.row_join(sp.Matrix(1, _nvars - len(_cT), [0] * (_nvars - len(_cT))))  # on complète le vecteur avec des 0
     assert (_cT.shape[1] == _nvars)
     #  les indices des colonnes HORS base
     _OuB = list(_A_col_ind - set(_InB))
     assert (len(_InB) == _nInB)
     assert (len(_OuB) == _nOuB)
-    _B = _A[:, [_InB[_i] - 1 for _i in range(_nInB)]]
-    _N = _A[:, [_OuB[_i] - 1 for _i in range(_nOuB)]]
+    _B = _A[:, [_InB[_i] for _i in range(_nInB)]]
+    _N = _A[:, [_OuB[_i] for _i in range(_nOuB)]]
     _detB = _B.det()
     _sol = dict()
     if _detB == 0:
@@ -49,8 +49,8 @@ def simplex_step(_A, _b, _cT, _InB):
         _xNsol = sp.Matrix(_nOuB, 1, [0] * _nOuB)  # que des 0
         assert (_xBsol.shape[0] == _nInB)
         assert (_xNsol.shape[0] == _nOuB)
-        _cTN = sp.Matrix(1, _nOuB, [_cT[_i - 1] for _i in _OuB])
-        _cTB = sp.Matrix(1, _nInB, [_cT[_i - 1] for _i in _InB])
+        _cTN = sp.Matrix(1, _nOuB, [_cT[_i] for _i in _OuB])
+        _cTB = sp.Matrix(1, _nInB, [_cT[_i] for _i in _InB])
         assert (_cTN.shape[1] == _nOuB)
         assert (_cTB.shape[1] == _nInB)
         _dTN = _cTN - _cTB * _Binv_N
@@ -60,13 +60,13 @@ def simplex_step(_A, _b, _cT, _InB):
         _temp_cT = list([None] * _nvars)
         _temp_dT = list([None] * _nvars)
         for _i in range(_nInB):
-            _temp_xsol[_InB[_i] - 1] = _xBsol[_i]
-            _temp_cT[_InB[_i] - 1] = _cTB[_i]
-            _temp_dT[_InB[_i] - 1] = _dTB[_i]
+            _temp_xsol[_InB[_i]] = _xBsol[_i]
+            _temp_cT[_InB[_i]] = _cTB[_i]
+            _temp_dT[_InB[_i]] = _dTB[_i]
         for _i in range(_nOuB):
-            _temp_xsol[_OuB[_i] - 1] = _xNsol[_i]
-            _temp_cT[_OuB[_i] - 1] = _cTN[_i]
-            _temp_dT[_OuB[_i] - 1] = _dTN[_i]
+            _temp_xsol[_OuB[_i]] = _xNsol[_i]
+            _temp_cT[_OuB[_i]] = _cTN[_i]
+            _temp_dT[_OuB[_i]] = _dTN[_i]
         assert (len([_x for _x in _temp_xsol if _x is None]) == 0)  # on a bien toutes les valeurs
         assert (len([_x for _x in _temp_cT if _x is None]) == 0)  # on a bien toutes les valeurs
         assert (len([_x for _x in _temp_dT if _x is None]) == 0)  # on a bien toutes les valeurs

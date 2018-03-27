@@ -53,10 +53,10 @@ M.dot(xBbase)
 sol = list()
 # matrice de départ complète
 A = M.row_join(sp.eye(M.shape[0]))
-sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 6]))
-sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 7]))
-sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 6, 7]))
-sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 5, 6, 7]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[i-1 for i in [2, 4, 5, 6]]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[i-1 for i in [2, 4, 5, 7]]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[i-1 for i in [2, 4, 6, 7]]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[i-1 for i in [2, 5, 6, 7]]))
 
 for _i in range(len(sol)):
     print('-------------')
@@ -114,11 +114,11 @@ Adual[step] = Mdual.row_join(sp.eye(Mdual.shape[0]))
 Mdual * sp.Matrix(4, 1, [0, 1, 0, 1])
 # comme les variables non nulles sont les colonnes 2 et 4, on va essayer
 # toutes les combinaisons avec ces deux colonnes en base pour trouver laquelle convient
-soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[1, 2, 4]))
-soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 3, 4]))
-soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 5]))
-soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 6]))
-soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 7]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[i-1 for i in [1, 2, 4]]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[i-1 for i in [2, 3, 4]]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[i-1 for i in [2, 4, 5]]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[i-1 for i in [2, 4, 6]]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[i-1 for i in [2, 4, 7]]))
 
 for _i in range(len(soldual)):
     print('-------------')
@@ -134,7 +134,7 @@ pvar("soldual_real[{}]['BinvN']".format(step))
 pvar("soldual_real[{}]['InB']".format(step))
 pvar("soldual_real[{}]['OuB']".format(step))
 pvar("soldual_real[{}]['Binvb']".format(step))
-pvar("soldual_real[{}]['xsol'][[_i-1 for _i in soldual_real[{}]['InB']], :]".format(step, step))
+pvar("soldual_real[{}]['xsol'][soldual_real[{}]['InB'], :]".format(step, step))
 pvar("soldual_real[{}]['BinvA']".format(step))
 pvar("soldual_real[{}]['dT']".format(step))
 pvar("soldual_real[{}]['tableau']".format(step))
@@ -150,15 +150,15 @@ Adual.append([])
 Adual[step] = soldual_real[0]['BinvA']
 soldual_real.append([])
 soldual_real[step] = simplex_step(_A=soldual_real[step - 1]['BinvA'],
-                                  _b=soldual_real[step-1]['Binvb'],
-                                  _cT=soldual_real[step-1]['cT'],
-                                  _InB=[2, 5, 7])
+                                  _b=soldual_real[step - 1]['Binvb'],
+                                  _cT=soldual_real[step - 1]['cT'],
+                                  _InB=[i-1 for i in [2, 5, 7]])
 pvar("soldual_real[{}]['A']".format(step))
 pvar("soldual_real[{}]['BinvN']".format(step))
 pvar("soldual_real[{}]['InB']".format(step))
 pvar("soldual_real[{}]['OuB']".format(step))
 pvar("soldual_real[{}]['Binvb']".format(step))
-pvar("soldual_real[{}]['xsol'][[_i-1 for _i in soldual_real[{}]['InB']], :]".format(step, step))
+pvar("soldual_real[{}]['xsol'][soldual_real[{}]['InB'], :]".format(step, step))
 pvar("soldual_real[{}]['BinvA']".format(step))
 pvar("soldual_real[{}]['dT']".format(step))
 pvar("soldual_real[{}]['tableau']".format(step))

@@ -2,349 +2,184 @@
 
 from __future__ import print_function
 import sympy as sp
-from typing import List, Dict
+from simplex_fun import pvar, simplex_step, solution_numerique
 
 sp.init_printing(use_unicode=True)
 
+####################################################################
+# calcul solution numérique
+# if True:
+if False:
+    c = [-3, -2, -1]  # attention, linprog cherche à minimiser et non pas à maximiser
+    A = [[1, -1, 1],
+         [2, 1, 3],
+         [-1, 0, 1],
+         [1, 1, 1]]
+    b = [4, 6, 3, 8]
+    solution_numerique(A, b, c)
+
+####################################################################
+# solution symbolique
 M = sp.Matrix([[1, -1, 1],
                [2, 1, 3],
                [-1, 0, 1],
                [1, 1, 1]])
-print(M)
-M.shape
+
+pvar('M')
+pvar('M.shape')
 nInB = M.shape[0]
 nOuB = M.shape[1]
 nvars = nInB + nOuB
 vars_list_name = ['x{}'.format(i) for i in range(nvars)]
 vars_list = sp.symbols(vars_list_name)
 V = sp.Matrix(nvars, 1, vars_list)
-print(V)
+pvar('V')
 
 b = sp.Matrix(M.shape[0], 1, [4, 6, 3, 8])
-print(b)
-
-print('M: ' + sp.latex(M))
-print('V: ' + sp.latex(V))
-print('b: ' + sp.latex(b))
-print('systM: ' + sp.latex(M * V[:nOuB, :] - b))
-
-
-#  solution realisable
-Sr = sp.Matrix(3, 1, [0, 6, 0])
-print(Sr)
-# verification que la solution est réalisable
-M.dot(Sr)
+pvar('b')
 
 # fonction à minimiser
 cT = sp.Matrix(1, nvars, [3, 2, 1, 0, 0, 0, 0])
 assert (cT.shape[1] == nvars)
 g = cT.dot(V)
 
-# Matrice A = (M Id)
-A = M.row_join(sp.eye(nInB))
-print('systA: ' + sp.latex(A * V - b))
+#  solution realisable
+xBbase = sp.Matrix(3, 1, [0, 6, 0])
+pvar('xBbase')
+# verification que la solution est réalisable
+M.dot(xBbase)
 
-# les indices des colonnes de A, numérotés de 1 à nvars
-# de façon à repérer les colonnes eb vase et hors base
-# comme dans le cours: de 1 à n
-A_col_ind = set([i + 1 for i in range(nvars)])
-
-
-# le conteneur des solutions testées
 sol = list()
+# matrice de départ complète
+A = M.row_join(sp.eye(M.shape[0]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 6]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 5, 7]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 4, 6, 7]))
+sol.append(simplex_step(_A=A, _b=b, _cT=cT, _InB=[2, 5, 6, 7]))
 
-#
-# une base: colonne 2 de M et colonnes 1 à 3 de IdR4
-#  les indices des colonnes EN base
-#
-numsol = 0  # numero de la base testée
-sol.append({})
-sol[numsol]['InB'] = [2, 4, 5, 6]
-#  les indices des colonnes HORS base
-sol[numsol]['OuB'] = list(A_col_ind - set(sol[numsol]['InB']))
-assert (len(sol[numsol]['InB']) == nInB)
-assert (len(sol[numsol]['OuB']) == nOuB)
-sol[numsol]['B'] = A[:, [sol[numsol]['InB'][i] - 1 for i in range(nInB)]]
-sol[numsol]['N'] = A[:, [sol[numsol]['OuB'][i] - 1 for i in range(nOuB)]]
-sol[numsol]['detB'] = sol[numsol]['B'].det()
-if sol[numsol]['detB'] == 0:
-    raise Exception('Base de rang < {}, impossible de calculer l\'inverse de B'.format(nInB))
-else:
-    sol[numsol]['Binv'] = sol[numsol]['B'].inv()
-    sol[numsol]['Binv'].multiply(sol[numsol]['B'])
-    sol[numsol]['xBsol'] = sol[numsol]['Binv'].multiply(b)
-    sol[numsol]['xNsol'] = sp.Matrix(nOuB, 1, [0] * nOuB)
-    assert (sol[numsol]['xBsol'].shape[0] == nInB)
-    assert (sol[numsol]['xNsol'].shape[0] == nOuB)
-    sol[numsol]['cTN'] = sp.Matrix(1, nOuB, [cT[i - 1] for i in sol[numsol]['OuB']])
-    sol[numsol]['cTB'] = sp.Matrix(1, nInB, [cT[i - 1] for i in sol[numsol]['InB']])
-    assert (sol[numsol]['cTN'].shape[1] == nOuB)
-    assert (sol[numsol]['cTB'].shape[1] == nInB)
-    sol[numsol]['dTN'] = sol[numsol]['cTN'] - sol[numsol]['cTB']\
-        .multiply(sol[numsol]['Binv'])\
-        .multiply(sol[numsol]['N'])
-    sol[numsol]['dTB'] = sp.Matrix(nInB, 1, [0] * nInB)
-    #  la solution complète
-    temp_xsol = list([None] * nvars)
-    temp_cT = list([None] * nvars)
-    temp_dT = list([None] * nvars)
-    for i in range(nInB):
-        temp_xsol[sol[numsol]['InB'][i] - 1] = sol[numsol]['xBsol'][i]
-        temp_cT[sol[numsol]['InB'][i] - 1] = sol[numsol]['cTB'][i]
-        temp_dT[sol[numsol]['InB'][i] - 1] = sol[numsol]['dTB'][i]
-    for i in range(nOuB):
-        temp_xsol[sol[numsol]['OuB'][i] - 1] = sol[numsol]['xNsol'][i]
-        temp_cT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['cTN'][i]
-        temp_dT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['dTN'][i]
-    assert (len([x for x in temp_xsol if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_cT if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_dT if x is None]) == 0)  # on a bien toutes les valeurs
-    sol[numsol]['xsol'] = sp.Matrix(nvars, 1, temp_xsol)
-    sol[numsol]['cT'] = sp.Matrix(1, nvars, temp_cT)
-    sol[numsol]['dT'] = sp.Matrix(1, nvars, temp_dT)
-    assert (sol[numsol]['xsol'].shape[0] == nvars)
-    assert (sol[numsol]['xsol'].shape[1] == 1)
-    assert (sol[numsol]['cT'].shape[0] == 1)
-    assert (sol[numsol]['cT'].shape[1] == nvars)
-    assert (sol[numsol]['dT'].shape[0] == 1)
-    assert (sol[numsol]['dT'].shape[1] == nvars)
-    sol[numsol]['fun'] = sol[numsol]['cT'] * sol[numsol]['xsol']
-#  ==> cette base conduit à une solution non réalisable (0, 8, 0, 12, -2, 3, 0) et qui ne conduit pas à x_2 = 6
-#      et pour laquelle dT = sol[numsol]['dT'] = (1, 0, -1, 0, 0, 0, -2)
+for _i in range(len(sol)):
+    print('-------------')
+    print('solution: {}'.format(_i + 1))
+    for _k in sol[_i].keys():
+        print('{}: {}'.format(_k, sol[_i][_k]))
 
+# la solution réalisable trouvée est: soldual[5]
+sol_real = [_x for _x in sol if _x['real']]
 
-#
-# une autre base: colonne 2 de M et colonnes 1, 2 et 4 de IdR4 => matrice B non inversible (rang < 4)
-#
-numsol = 1  # numero de la base testée
-sol.append({})
-A
-sol[numsol]['InB'] = [2, 4, 5, 7]
-#  les indices des colonnes HORS base
-sol[numsol]['OuB'] = list(A_col_ind - set(sol[numsol]['InB']))
-assert (len(sol[numsol]['InB']) == nInB)
-assert (len(sol[numsol]['OuB']) == nOuB)
-sol[numsol]['B'] = A[:, [sol[numsol]['InB'][i] - 1 for i in range(nInB)]]
-sol[numsol]['N'] = A[:, [sol[numsol]['OuB'][i] - 1 for i in range(nOuB)]]
-sol[numsol]['detB'] = sol[numsol]['B'].det()
-if sol[numsol]['detB'] == 0:
-    raise Exception('Base de rang < {}, impossible de calculer l\'inverse de B'.format(nInB))
-else:
-    sol[numsol]['Binv'] = sol[numsol]['B'].inv()
-    sol[numsol]['Binv'].multiply(sol[numsol]['B'])
-    sol[numsol]['xBsol'] = sol[numsol]['Binv'].multiply(b)
-    sol[numsol]['xNsol'] = sp.Matrix(nOuB, 1, [0] * nOuB)
-    assert (sol[numsol]['xBsol'].shape[0] == nInB)
-    assert (sol[numsol]['xNsol'].shape[0] == nOuB)
-    sol[numsol]['cTN'] = sp.Matrix(1, nOuB, [cT[i - 1] for i in sol[numsol]['OuB']])
-    sol[numsol]['cTB'] = sp.Matrix(1, nInB, [cT[i - 1] for i in sol[numsol]['InB']])
-    assert (sol[numsol]['cTN'].shape[1] == nOuB)
-    assert (sol[numsol]['cTB'].shape[1] == nInB)
-    sol[numsol]['dTN'] = sol[numsol]['cTN'] - sol[numsol]['cTB']\
-        .multiply(sol[numsol]['Binv'])\
-        .multiply(sol[numsol]['N'])
-    sol[numsol]['dTB'] = sp.Matrix(nInB, 1, [0] * nInB)
-    #  la solution complète
-    temp_xsol = list([None] * nvars)
-    temp_cT = list([None] * nvars)
-    temp_dT = list([None] * nvars)
-    for i in range(nInB):
-        temp_xsol[sol[numsol]['InB'][i] - 1] = sol[numsol]['xBsol'][i]
-        temp_cT[sol[numsol]['InB'][i] - 1] = sol[numsol]['cTB'][i]
-        temp_dT[sol[numsol]['InB'][i] - 1] = sol[numsol]['dTN'][i]
-    for i in range(nOuB):
-        temp_xsol[sol[numsol]['OuB'][i] - 1] = sol[numsol]['xNsol'][i]
-        temp_cT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['cTN'][i]
-        temp_cT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['dTN'][i]
-    assert (len([x for x in temp_xsol if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_cT if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_dT if x is None]) == 0)  # on a bien toutes les valeurs
-    sol[numsol]['xsol'] = sp.Matrix(nvars, 1, temp_xsol)
-    sol[numsol]['cT'] = sp.Matrix(1, nvars, temp_cT)
-    sol[numsol]['dT'] = sp.Matrix(1, nvars, temp_dT)
-    assert (sol[numsol]['xsol'].shape[0] == nvars)
-    assert (sol[numsol]['xsol'].shape[1] == 1)
-    assert (sol[numsol]['cT'].shape[0] == 1)
-    assert (sol[numsol]['cT'].shape[1] == nvars)
-    assert (sol[numsol]['dT'].shape[0] == 1)
-    assert (sol[numsol]['dT'].shape[1] == nvars)
-    sol[numsol]['fun'] = sol[numsol]['cT'] * sol[numsol]['xsol']
+# exit()
 
-
-#
-# une autre base: colonne 2 de M et colonnes 1, 3 et 4 de IdR4
-#
-numsol = 2  # numero de la base testée
-sol.append({})
-A
-sol[numsol]['InB'] = [2, 4, 6, 7]
-#  les indices des colonnes HORS base
-sol[numsol]['OuB'] = list(A_col_ind - set(sol[numsol]['InB']))
-assert (len(sol[numsol]['InB']) == nInB)
-assert (len(sol[numsol]['OuB']) == nOuB)
-sol[numsol]['B'] = A[:, [sol[numsol]['InB'][i] - 1 for i in range(nInB)]]
-sol[numsol]['N'] = A[:, [sol[numsol]['OuB'][i] - 1 for i in range(nOuB)]]
-sol[numsol]['detB'] = sol[numsol]['B'].det()
-if sol[numsol]['detB'] == 0:
-    raise Exception('Base de rang < {}, impossible de calculer l\'inverse de B'.format(nInB))
-else:
-    sol[numsol]['Binv'] = sol[numsol]['B'].inv()
-    sol[numsol]['Binv'].multiply(sol[numsol]['B'])
-    sol[numsol]['xBsol'] = sol[numsol]['Binv'].multiply(b)
-    sol[numsol]['xNsol'] = sp.Matrix(nOuB, 1, [0] * nOuB)
-    assert (sol[numsol]['xBsol'].shape[0] == nInB)
-    assert (sol[numsol]['xNsol'].shape[0] == nOuB)
-    sol[numsol]['cTN'] = sp.Matrix(1, nOuB, [cT[i - 1] for i in sol[numsol]['OuB']])
-    sol[numsol]['cTB'] = sp.Matrix(1, nInB, [cT[i - 1] for i in sol[numsol]['InB']])
-    assert (sol[numsol]['cTN'].shape[1] == nOuB)
-    assert (sol[numsol]['cTB'].shape[1] == nInB)
-    sol[numsol]['dTN'] = sol[numsol]['cTN'] - sol[numsol]['cTB']\
-        .multiply(sol[numsol]['Binv'])\
-        .multiply(sol[numsol]['N'])
-    sol[numsol]['dTB'] = sp.Matrix(nInB, 1, [0] * nInB)
-    #  la solution complète
-    temp_xsol = list([None] * nvars)
-    temp_cT = list([None] * nvars)
-    temp_dT = list([None] * nvars)
-    for i in range(nInB):
-        temp_xsol[sol[numsol]['InB'][i] - 1] = sol[numsol]['xBsol'][i]
-        temp_cT[sol[numsol]['InB'][i] - 1] = sol[numsol]['cTB'][i]
-        temp_dT[sol[numsol]['InB'][i] - 1] = sol[numsol]['dTB'][i]
-    for i in range(nOuB):
-        temp_xsol[sol[numsol]['OuB'][i] - 1] = sol[numsol]['xNsol'][i]
-        temp_cT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['cTN'][i]
-        temp_dT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['dTN'][i]
-    assert (len([x for x in temp_xsol if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_cT if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_dT if x is None]) == 0)  # on a bien toutes les valeurs
-    sol[numsol]['xsol'] = sp.Matrix(nvars, 1, temp_xsol)
-    sol[numsol]['cT'] = sp.Matrix(1, nvars, temp_cT)
-    sol[numsol]['dT'] = sp.Matrix(1, nvars, temp_dT)
-    assert (sol[numsol]['xsol'].shape[0] == nvars)
-    assert (sol[numsol]['xsol'].shape[1] == 1)
-    assert (sol[numsol]['cT'].shape[0] == 1)
-    assert (sol[numsol]['cT'].shape[1] == nvars)
-    assert (sol[numsol]['dT'].shape[0] == 1)
-    assert (sol[numsol]['dT'].shape[1] == nvars)
-    sol[numsol]['fun'] = sol[numsol]['cT'] * sol[numsol]['xsol']
-#  cette base conduit à une solution réalisable (0, 6, 0, 10, 0, 3, 2) qui conduit bien à x_2 = 6
-#  et pour laquelle dTN = [-1  0  -5  0  -2  0  0] n'a que des coefficients négatifs
-
-
-#
-# une autre base: colonne 2 de M et colonnes 2, 3 et 4 de IdR4
-#
-numsol = 3
-sol.append({})
-A
-sol[numsol]['InB'] = [2, 5, 6, 7]
-#  les indices des colonnes HORS base
-sol[numsol]['OuB'] = list(A_col_ind - set(sol[numsol]['InB']))
-assert (len(sol[numsol]['InB']) == nInB)
-assert (len(sol[numsol]['OuB']) == nOuB)
-sol[numsol]['B'] = A[:, [sol[numsol]['InB'][i] - 1 for i in range(nInB)]]
-sol[numsol]['N'] = A[:, [sol[numsol]['OuB'][i] - 1 for i in range(nOuB)]]
-sol[numsol]['detB'] = sol[numsol]['B'].det()
-if sol[numsol]['detB'] == 0:
-    raise Exception('Base de rang < {}, impossible de calculer l\'inverse de B'.format(nInB))
-else:
-    sol[numsol]['Binv'] = sol[numsol]['B'].inv()
-    sol[numsol]['Binv'].multiply(sol[numsol]['B'])
-    sol[numsol]['xBsol'] = sol[numsol]['Binv'].multiply(b)
-    sol[numsol]['xNsol'] = sp.Matrix(nOuB, 1, [0] * nOuB)
-    assert (sol[numsol]['xBsol'].shape[0] == nInB)
-    assert (sol[numsol]['xNsol'].shape[0] == nOuB)
-    sol[numsol]['cTN'] = sp.Matrix(1, nOuB, [cT[i - 1] for i in sol[numsol]['OuB']])
-    sol[numsol]['cTB'] = sp.Matrix(1, nInB, [cT[i - 1] for i in sol[numsol]['InB']])
-    assert (sol[numsol]['cTN'].shape[1] == nOuB)
-    assert (sol[numsol]['cTB'].shape[1] == nInB)
-    sol[numsol]['dTN'] = sol[numsol]['cTN'] - sol[numsol]['cTB']\
-        .multiply(sol[numsol]['Binv'])\
-        .multiply(sol[numsol]['N'])
-    sol[numsol]['dTB'] = sp.Matrix(nInB, 1, [0] * nInB)
-    #  la solution complète
-    temp_xsol = list([None] * nvars)
-    temp_cT = list([None] * nvars)
-    temp_dT = list([None] * nvars)
-    for i in range(nInB):
-        temp_xsol[sol[numsol]['InB'][i] - 1] = sol[numsol]['xBsol'][i]
-        temp_cT[sol[numsol]['InB'][i] - 1] = sol[numsol]['cTB'][i]
-        temp_dT[sol[numsol]['InB'][i] - 1] = sol[numsol]['dTB'][i]
-    for i in range(nOuB):
-        temp_xsol[sol[numsol]['OuB'][i] - 1] = sol[numsol]['xNsol'][i]
-        temp_cT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['cTN'][i]
-        temp_dT[sol[numsol]['OuB'][i] - 1] = sol[numsol]['dTN'][i]
-    assert (len([x for x in temp_xsol if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_cT if x is None]) == 0)  # on a bien toutes les valeurs
-    assert (len([x for x in temp_dT if x is None]) == 0)  # on a bien toutes les valeurs
-    sol[numsol]['xsol'] = sp.Matrix(nvars, 1, temp_xsol)
-    sol[numsol]['cT'] = sp.Matrix(1, nvars, temp_cT)
-    sol[numsol]['dT'] = sp.Matrix(1, nvars, temp_dT)
-    assert (sol[numsol]['xsol'].shape[0] == nvars)
-    assert (sol[numsol]['xsol'].shape[1] == 1)
-    assert (sol[numsol]['cT'].shape[0] == 1)
-    assert (sol[numsol]['cT'].shape[1] == nvars)
-    assert (sol[numsol]['dT'].shape[0] == 1)
-    assert (sol[numsol]['dT'].shape[1] == nvars)
-    sol[numsol]['fun'] = sol[numsol]['cT'] * sol[numsol]['xsol']
-# ==> conduit à une solution non realisable: [0  -4  0  0  10  3  12]
-#     avec dT = [5  0  3  2  0  0  0]
-
-
-
-# solution numérique
-from scipy.optimize import linprog
-
-c = [-3, -2, -1]  # attention, linprog cherche à minimiser et non pas à maximiser
-A = [[1, -1, 1],
-     [2, 1, 3],
-     [-1, 0, 1],
-     [1, 1, 1]]
-b = [4, 6, 3, 8]
-x0_bnds = (0, None)
-x1_bnds = (0, None)
-x2_bnds = (0, None)
-res = linprog(c, A, b, bounds=(x0_bnds, x1_bnds, x2_bnds))
-print(res)
-
-
-
+####################################################################
 #  problème dual
+print('\n**** PROBLÈME DUAL ****\n')
 Mdual = -M.transpose()
-print(Mdual)
+pvar('Mdual.shape')
+pvar('Mdual')
+nInBdual = Mdual.shape[0]
+nOuBdual = Mdual.shape[1]
+nvarsdual = nInBdual + nOuBdual
+vars_list_name_dual = ['y{}'.format(i) for i in range(nvarsdual)]
+vars_list_dual = sp.symbols(vars_list_name_dual)
+Vdual = sp.Matrix(nvarsdual, 1, vars_list_dual)
+pvar('Vdual')
 
-y1, y2, y3, y4, y5, y6, y7 = sp.symbols('y1 y2 y3 y4, y5, y6, y7')
-
-Vdual = sp.Matrix(4, 1, [y1, y2, y3, y4])
-print(Vdual)
-cT
+pvar('cT')
 bdual = -cT.transpose()[:3, :]
-print(bdual)
+pvar('bdual')
 
-b
+pvar('b')
 cTdual = -b.transpose()
+# on complète le vecteur avec des 0
+cTdual = cTdual.row_join(sp.Matrix(1, nvarsdual - len(cTdual), [0] * (nvarsdual - len(cTdual))))
+pvar('cTdual')
+assert (cTdual.shape[1] == nvarsdual)
+gdual = cTdual.dot(Vdual)
+pvar('gdual')
 
 print('Mdual: ' + sp.latex(Mdual))
 print('Vdual: ' + sp.latex(Vdual))
 print('bdual: ' + sp.latex(bdual))
-print('systMdual: ' + sp.latex(Mdual * Vdual - bdual))
+print('systMdual: ' + sp.latex(Mdual * Vdual[:Mdual.shape[1], :] - bdual))
 
-# une solution de départ réalisable
-Mdual * sp.Matrix(4, 1, [0, 1, 0, 1])
-bdual
 
-# recherche base réalisable de départ
+step = 0
+print('\n**** PROBLÈME DUAL STEP {} ****\n'.format(step))
 soldual = list()
-# une base: colonne 2 et 4 de M et colonnes 1 de IdR3
-soldual.append({})
-numsol = 0
-soldual[numsol]['Bdual'] = Mdual[:, [1, 3]].row_join(sp.eye(3)[:, 0])
-soldual[numsol]['Bdualinv'] = soldual[numsol]['Bdual'].inv()
-soldual[numsol]['Bdualinv'].multiply(soldual[numsol]['Bdual'])
-sp.latex(soldual[numsol]['Bdualinv'])
-soldual[numsol]['xBs'] = soldual[numsol]['Bdualinv'].multiply(bdual)
-soldual[numsol]['xNs'] = sp.Matrix(4, 1, [0, 0, 0, 0])
-cTNdual = cTdual[:, [0, 2]].row_join(sp.Matrix(1, 1, [0]))
-cTBdual = cTdual[:, [1, 3]].row_join(sp.Matrix(1, 1, [0]))
-soldual[numsol]['dTN'] = cTNdual - cTBdual.multiply(soldual[numsol]['Bdualinv'])
-#  cette base conduit à une solution non réalisable (0, 8, 0, 12, -1, 3, 0) et qui ne conduit pas à x_2 = 6
+# matrice de départ complète
+Adual = list()
+Adual.append([])
+Adual[step] = Mdual.row_join(sp.eye(Mdual.shape[0]))
+
+# une solution de départ réalisable (vérifiée)
+Mdual * sp.Matrix(4, 1, [0, 1, 0, 1])
+# comme les variables non nulles sont les colonnes 2 et 4, on va essayer
+# toutes les combinaisons avec ces deux colonnes en base pour trouver laquelle convient
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[1, 2, 4]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 3, 4]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 5]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 6]))
+soldual.append(simplex_step(_A=Adual[step], _b=bdual, _cT=cTdual, _InB=[2, 4, 7]))
+
+for _i in range(len(soldual)):
+    print('-------------')
+    print('solution: {}'.format(_i + 1))
+    for _k in soldual[_i].keys():
+        print('{}: {}'.format(_k, soldual[_i][_k]))
+
+# la solution réalisable trouvée est: soldual[5]
+soldual_real = [_x for _x in soldual if _x['real']]
+
+pvar("soldual_real[{}]['A']".format(step))
+pvar("soldual_real[{}]['BinvN']".format(step))
+pvar("soldual_real[{}]['InB']".format(step))
+pvar("soldual_real[{}]['OuB']".format(step))
+pvar("soldual_real[{}]['Binvb']".format(step))
+pvar("soldual_real[{}]['xsol'][[_i-1 for _i in soldual_real[{}]['InB']], :]".format(step, step))
+pvar("soldual_real[{}]['BinvA']".format(step))
+pvar("soldual_real[{}]['dT']".format(step))
+pvar("soldual_real[{}]['tableau']".format(step))
+print(sp.latex(soldual_real[step]['tableau'], mode='equation'))
+
+
+# au vu du tableau, on peut faire sortir 4 et entrer 5
+# la base devient [2, 4, 5]
+step = int(1)
+print('\n**** PROBLÈME DUAL STEP {} ****\n'.format(step))
+Adual.append([])
+# la nouvelle matrice A est égale à BinvA de l'étape précédente
+Adual[step] = soldual_real[0]['BinvA']
+soldual_real.append([])
+soldual_real[step] = simplex_step(_A=soldual_real[step - 1]['BinvA'],
+                                  _b=soldual_real[step-1]['Binvb'],
+                                  _cT=soldual_real[step-1]['cT'],
+                                  _InB=[2, 5, 7])
+pvar("soldual_real[{}]['A']".format(step))
+pvar("soldual_real[{}]['BinvN']".format(step))
+pvar("soldual_real[{}]['InB']".format(step))
+pvar("soldual_real[{}]['OuB']".format(step))
+pvar("soldual_real[{}]['Binvb']".format(step))
+pvar("soldual_real[{}]['xsol'][[_i-1 for _i in soldual_real[{}]['InB']], :]".format(step, step))
+pvar("soldual_real[{}]['BinvA']".format(step))
+pvar("soldual_real[{}]['dT']".format(step))
+pvar("soldual_real[{}]['tableau']".format(step))
+
+print(sp.latex(soldual_real[step]['tableau'], mode='equation'))
+
+
+# exit()
+
+# # recherche base réalisable de départ
+# soldual = list()
+# # une base: colonne 2 et 4 de M et colonnes 1 de IdR3
+# soldual.append({})
+# numsol = 0
+# soldual[numsol]['Bdual'] = Mdual[:, [1, 3]].row_join(sp.eye(3)[:, 0])
+# soldual[numsol]['Bdualinv'] = soldual[numsol]['Bdual'].inv()
+# soldual[numsol]['Bdualinv'].multiply(soldual[numsol]['Bdual'])
+# sp.latex(soldual[numsol]['Bdualinv'])
+# soldual[numsol]['xBs'] = soldual[numsol]['Bdualinv'].multiply(bdual)
+# soldual[numsol]['xNs'] = sp.Matrix(4, 1, [0, 0, 0, 0])
+# cTNdual = cTdual[:, [0, 2]].row_join(sp.Matrix(1, 1, [0]))
+# cTBdual = cTdual[:, [1, 3]].row_join(sp.Matrix(1, 1, [0]))
+# soldual[numsol]['dTN'] = cTNdual - cTBdual.multiply(soldual[numsol]['Bdualinv'])
+# #  cette base conduit à une solution non réalisable (0, 8, 0, 12, -1, 3, 0) et qui ne conduit pas à x_2 = 6
+

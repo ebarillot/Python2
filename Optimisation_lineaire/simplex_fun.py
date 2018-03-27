@@ -46,7 +46,7 @@ def simplex_step(_A, _b, _cT, _InB):
         _Binv_b = _Binv * _b
         #  solution de base
         _xBsol = _Binv_b
-        _xNsol = sp.Matrix(_nOuB, 1, [0] * _nOuB)   # que des 0
+        _xNsol = sp.Matrix(_nOuB, 1, [0] * _nOuB)  # que des 0
         assert (_xBsol.shape[0] == _nInB)
         assert (_xNsol.shape[0] == _nOuB)
         _cTN = sp.Matrix(1, _nOuB, [_cT[_i - 1] for _i in _OuB])
@@ -54,7 +54,7 @@ def simplex_step(_A, _b, _cT, _InB):
         assert (_cTN.shape[1] == _nOuB)
         assert (_cTB.shape[1] == _nInB)
         _dTN = _cTN - _cTB * _Binv_N
-        _dTB = sp.Matrix(_nInB, 1, [0] * _nInB) # que des 0
+        _dTB = sp.Matrix(_nInB, 1, [0] * _nInB)  # que des 0
         #  la solution complète
         _temp_xsol = list([None] * _nvars)
         _temp_cT = list([None] * _nvars)
@@ -108,16 +108,25 @@ def solution_numerique(_M, _b, _c, callback=None):
 def simplex_callback_print(xk, **kwargs):
     print('--> Phase {}, it {}:'.format(kwargs['phase'], kwargs['nit']))
     print('xk: {}'.format(xk))
-    for k in set(kwargs.keys())-{'phase', 'nit', 'tableau'}:
+    for k in set(kwargs.keys()) - {'phase', 'nit', 'tableau'}:
         print('{}: {}'.format(k, kwargs[k]))
     print('tableau:\n {}'.format(kwargs['tableau']))
 
 
 if __name__ == "__main__":
-    c = [-3, -2, -1]  # attention, linprog cherche à minimiser et non pas à maximiser
+    print("\n**** PROBLEME DIRECT ****\n")
     A = [[1, -1, 1],
          [2, 1, 3],
          [-1, 0, 1],
          [1, 1, 1]]
     b = [4, 6, 3, 8]
+    c = [-3, -2, -1]  # attention, linprog cherche à minimiser et non pas à maximiser
     solution_numerique(A, b, c, simplex_callback_print)
+
+    print("\n**** PROBLEME DUAL ****\n")
+    Adual = [[-1, -2, 1, -1],
+             [1, -1, 0, -1],
+             [-1, -3, -1, -1]]
+    bdual = [-3, -2, -1]
+    cdual = [-x for x in [-4, -6, -3, -8]]
+    solution_numerique(Adual, bdual, cdual, simplex_callback_print)

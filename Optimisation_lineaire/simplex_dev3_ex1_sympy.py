@@ -2,7 +2,8 @@
 
 from __future__ import print_function
 import sympy as sp
-from simplex_fun import pvar, simplex_step, solution_numerique
+
+from Optimisation_lineaire.simplex_fun import pvar, simplex_step, solution_numerique, simplex_callback_print
 
 sp.init_printing(use_unicode=True)
 
@@ -163,6 +164,13 @@ pvar("soldual_real[{}]['dT']".format(step))
 pvar("soldual_real[{}]['tableau']".format(step))
 
 print(sp.latex(soldual_real[step]['tableau'], mode='equation'))
+
+
+# résolution numérique du probleme dual
+l_Mdual = Mdual.tolist()
+l_bdual = list(bdual)
+l_cdual = [-x for x in list(cTdual[:, :Mdual.shape[1]])]
+solution_numerique(l_Mdual, l_bdual, l_cdual, simplex_callback_print)
 
 
 # exit()

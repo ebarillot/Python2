@@ -1,18 +1,20 @@
 # coding=utf-8
 from __future__ import print_function
 import sympy as sp
-from typing import List, Dict
+from typing import Union, List, Dict
 import sys
 
 
 # fontion qui marche même si l'objet à afficher est dans un autre module
 def pvar(expression):
+    # type: (Union[str, unicode]) -> None
     frame = sys._getframe(1)
     print(expression, ':', repr(eval(expression, frame.f_globals, frame.f_locals)))
 
 
 # fontion qui marche si l'objet à afficher est dans ce module
 def pvar2(var):
+    # type: (Union[str, unicode]) -> None
     print('{}: {}'.format(var, repr(eval(var))))
 
 
@@ -35,6 +37,8 @@ def simplex_step(_A, _b, _cT, _InB):
     if _detB == 0:
         _sol['A'] = _A
         _sol['b'] = _b
+        _sol['B'] = _B
+        _sol['detB'] = _detB
         _sol['InB'] = _InB
         _sol['ret'] = 'Base de rang < {}, impossible de calculer l\'inverse de B'.format(_nInB)
         _sol['real'] = False
@@ -82,10 +86,15 @@ def simplex_step(_A, _b, _cT, _InB):
         _fun = _cT * _xsol
         _sol['A'] = _A
         _sol['b'] = _b
+        _sol['B'] = _B
         _sol['InB'] = _InB
         _sol['OuB'] = _OuB
         _sol['cT'] = _cT
+        _sol['cTB'] = _cTB
+        _sol['cTN'] = _cTN
         _sol['dT'] = _dT
+        _sol['dTB'] = _dTB
+        _sol['dTN'] = _dTN
         _sol['xsol'] = _xsol
         _sol['Binv'] = _Binv
         _sol['detB'] = _detB
@@ -97,6 +106,13 @@ def simplex_step(_A, _b, _cT, _InB):
         _sol['real'] = all([_x >= 0 for _x in _xsol[:, 0]])
         _sol['ret'] = 'OK'
     return _sol
+
+
+def sol_is_real(xBbase, M, b):
+    # type: (sp.Matrix, sp.Matrix, sp.Matrix) -> bool
+    # toutes les composantes sont >= 0
+    # ET toutes les expressions sont <= b dans le système linéaire: les contraintes sont bien vérifiées
+    return all([_x >= 0 for _x in xBbase[:, 0]]) and all([_x <= 0 for _x in (M * xBbase - b)[:, 0]])
 
 
 def solution_numerique(_M, _b, _c, callback=None):

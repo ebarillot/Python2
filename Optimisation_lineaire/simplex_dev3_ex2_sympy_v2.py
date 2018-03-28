@@ -88,7 +88,7 @@ pvar('M.shape')
 nInB = M.shape[0]
 nOuB = M.shape[1]
 nvars = nInB + nOuB
-vars_list_name = ['x{}'.format(i) for i in range(nvars)] + ['b00']
+vars_list_name = ['y_{}'.format(i) for i in range(1,nvars+1)] + ['b00']
 vars_list = sp.symbols(vars_list_name)
 V = sp.Matrix(nvars, 1, vars_list[:nvars])
 Vtab = sp.Matrix(nvars+1, 1, vars_list)
@@ -117,7 +117,7 @@ print('\n**** INIT STEP {} ****\n'.format(step))
 Ainit = M.row_join(sp.eye(M.shape[0])).row_join(sp.Matrix(M.shape[0], 1, [-1]*M.shape[0]))
 #
 # liste des variables pour le probleme d'initialisation
-vars_list_name_init = ['x{}'.format(i) for i in range(nvars+1)] + ['b00']
+vars_list_name_init = ['y_{}'.format(i) for i in range(1,nvars+1+1)] + ['b00']
 vars_list_init = sp.symbols(vars_list_name_init)
 Vinit = sp.Matrix(nvars+2, 1, vars_list_init)
 pvar("Vinit[:nvars+1, :].transpose().col_join(Ainit)".format(step))
@@ -137,7 +137,7 @@ pvar("Vinit.transpose().col_join(Ainit.row_join(binit))".format(step))
 # [-2,  1,  0, -1,  0,  0,  0,  0,  1,  0,   0,  -1,   1],
 # [ 1, -1,  0,  0, -1,  0,  0,  0,  0,  1,   0,  -1,   2],
 # [-1,  1,  0,  0, -1,  0,  0,  0,  0,  0,   1,  -1,  -2]])
-# => [1, -1, -1, 1, 2, -2]
+# => b = [1, -1, -1, 1, 2, -2]
 # Le plus négatif des b est -2, en position 6 dans b
 # donc correspond à x10 (col 11) dans Ainit
 
@@ -145,7 +145,7 @@ pvar("Vinit.transpose().col_join(Ainit.row_join(binit))".format(step))
 solinit = list()
 solinit.append(simplex_step(_A=Ainit, _b=binit, _cT=cTinit, _InB=[i-1 for i in [ 6, 7, 8, 9, 10, 12 ]]))
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
-pvar("sp.latex(Vinit.transpose().col_join(solinit[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, b00],
 # [ 2,  0, -1,  0,  1,  1,  0,  0,  0,  0,  -1,   0,   3],
 # [ 0, -2, -1,  0,  1,  0,  1,  0,  0,  0,  -1,   0,   1],
@@ -164,7 +164,7 @@ solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _cT=solinit[step - 1]['cT'],
                              _InB=[i - 1 for i in [ 1, 6, 7, 9, 10, 12 ]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
-pvar("sp.latex(Vinit.transpose().col_join(solinit[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0,   x1, x2,   x3,   x4, x5, x6,   x7, x8, x9,  x10, x11,  b00],
 # [ 1, -2/3,  0, -1/3,  1/3,  0,  0,  1/3,  0,  0, -1/3,   0,  1/3],
 # [ 0,  4/3, -1,  2/3,  1/3,  1,  0, -2/3,  0,  0, -1/3,   0,  7/3],
@@ -184,7 +184,7 @@ solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _cT=solinit[step - 1]['cT'],
                              _InB=[i - 1 for i in [ 1, 4, 7, 9, 10, 12 ]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
-pvar("sp.latex(Vinit.transpose().col_join(solinit[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1,   x2, x3,  x4,   x5, x6, x7, x8, x9,  x10, x11, b00],
 # [ 1,  0, -1/2,  0, 1/2,  1/2,  0,  0,  0,  0, -1/2,   0, 3/2],
 # [ 0,  2, -3/2,  1, 1/2,  3/2,  0, -1,  0,  0, -1/2,   0, 7/2],
@@ -203,7 +203,7 @@ solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _cT=solinit[step - 1]['cT'],
                              _InB=[i - 1 for i in [ 1, 3, 4, 7, 9, 12 ]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
-pvar("sp.latex(Vinit.transpose().col_join(solinit[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8,   x9,  x10, x11, b00],
 # [ 1, -1,  0,  0,  0,  0,  0,  0,  0,  1/2, -1/2,   0,   2],
 # [ 0, -2,  1,  0, -1, -1,  0,  0,  0,    1,    0,   0,   1],
@@ -222,7 +222,7 @@ solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _cT=solinit[step - 1]['cT'],
                              _InB=[i - 1 for i in [ 1, 3, 4, 5, 7, 9 ]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
-pvar("sp.latex(Vinit.transpose().col_join(solinit[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8,   x9,  x10, x11, b00],
 # [ 1, -1,  0,  0,  0,  0,  0,  0,  0,  1/2, -1/2,   0,   2],
 # [ 0, -2,  1,  0,  0, -1,  0,  0,  0,  1/2, -1/2,   1,   1],
@@ -260,7 +260,7 @@ sol_real[step] = simplex_step(_A=Atab,
                               _cT=cT,
                               _InB=[0, 2, 3, 4, 6, 8])  # indices 0 based
 pvar("Vtab.transpose().col_join(sol_real[{}]['tableau'])".format(step))
-pvar("sp.latex(Vtab.transpose().col_join(sol_real[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8,   x9,  x10, b00],
 # [ 1, -1,  0,  0,  0,  0,  0,  0,  0,  1/2, -1/2,   2],
 # [ 0, -2,  1,  0,  0, -1,  0,  0,  0,  1/2, -1/2,   1],
@@ -280,7 +280,7 @@ sol_real[step] = simplex_step(_A=sol_real[step - 1]['BinvA'],
                              _cT=sol_real[step - 1]['cT'],
                              _InB=[0, 3, 4, 6, 8, 9])  # indices 0 based
 pvar("Vtab.transpose().col_join(sol_real[{}]['tableau'])".format(step))
-pvar("sp.latex(Vtab.transpose().col_join(sol_real[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, b00],
 # [ 1,  1, -1,  0,  0,  1,  0,  0,  0,  0,   0,   1],
 # [ 0,  3, -2,  1,  0,  2,  0, -1,  0,  0,   0,   3],
@@ -298,7 +298,7 @@ sol_real[step] = simplex_step(_A=sol_real[step - 1]['BinvA'],
                              _cT=sol_real[step - 1]['cT'],
                              _InB=[1, 3, 4, 6, 8, 9])  # indices 0 based
 pvar("Vtab.transpose().col_join(sol_real[{}]['tableau'])".format(step))
-pvar("sp.latex(Vtab.transpose().col_join(sol_real[{}]['tableau']), mode='equation*')".format(step))
+print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, b00],
 # [ 1,  1, -1,  0,  0,  1,  0,  0,  0,  0,   0,   1],
 # [-3,  0,  1,  1,  0, -1,  0, -1,  0,  0,   0,   0],

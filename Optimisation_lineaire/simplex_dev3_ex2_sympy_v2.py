@@ -61,37 +61,37 @@ sp.init_printing(use_unicode=True)
 if False:
     # attention, linprog cherche à minimiser et non pas à maximiser: c'est bien ce qu'on veut pour ce pb
     c = [0, 0, 1, 1, 1]
-    A = [[  1,   1, -1,  0,  0],
-         [ -1,  -1, -1,  0,  0],
-         [  2,  -1,  0, -1,  0],
-         [ -2,   1,  0, -1,  0],
-         [  1,  -1,  0,  0, -1],
-         [ -1,   1,  0,  0, -1]]
-    b = [ 1,
+    A = [[1, 1, -1, 0, 0],
+         [-1, -1, -1, 0, 0],
+         [2, -1, 0, -1, 0],
+         [-2, 1, 0, -1, 0],
+         [1, -1, 0, 0, -1],
+         [-1, 1, 0, 0, -1]]
+    b = [1,
          -1,
          -1,
-          1,
-          2,
+         1,
+         2,
          -2]
     solution_numerique(A, b, c, simplex_callback_print)
 
 ####################################################################
 # solution symbolique
-M = sp.Matrix([[  1,   1, -1,  0,  0],
-               [ -1,  -1, -1,  0,  0],
-               [  2,  -1,  0, -1,  0],
-               [ -2,   1,  0, -1,  0],
-               [  1,  -1,  0,  0, -1],
-               [ -1,   1,  0,  0, -1]])
+M = sp.Matrix([[1, 1, -1, 0, 0],
+               [-1, -1, -1, 0, 0],
+               [2, -1, 0, -1, 0],
+               [-2, 1, 0, -1, 0],
+               [1, -1, 0, 0, -1],
+               [-1, 1, 0, 0, -1]])
 pvar('M')
 pvar('M.shape')
 nInB = M.shape[0]
 nOuB = M.shape[1]
 nvars = nInB + nOuB
-vars_list_name = ['y_{}'.format(i) for i in range(1,nvars+1)] + ['b00']
+vars_list_name = ['y_{}'.format(i) for i in range(1, nvars + 1)] + ['b00']
 vars_list = sp.symbols(vars_list_name)
 V = sp.Matrix(nvars, 1, vars_list[:nvars])
-Vtab = sp.Matrix(nvars+1, 1, vars_list)
+Vtab = sp.Matrix(nvars + 1, 1, vars_list)
 pvar('V')
 pvar('Vtab')
 
@@ -108,25 +108,24 @@ assert (cT.shape[1] == nvars)
 g = cT.dot(V)
 pvar('g')
 
-
 # recherche d'une solution initiale réalisable
 # par la méthode du cours
 step = 0
 print('\n**** INIT STEP {} ****\n'.format(step))
 # matrice de départ complète
-Ainit = M.row_join(sp.eye(M.shape[0])).row_join(sp.Matrix(M.shape[0], 1, [-1]*M.shape[0]))
+Ainit = M.row_join(sp.eye(M.shape[0])).row_join(sp.Matrix(M.shape[0], 1, [-1] * M.shape[0]))
 #
 # liste des variables pour le probleme d'initialisation
-vars_list_name_init = ['y_{}'.format(i) for i in range(1,nvars+1+1)] + ['b00']
+vars_list_name_init = ['y_{}'.format(i) for i in range(1, nvars + 1 + 1)] + ['b00']
 vars_list_init = sp.symbols(vars_list_name_init)
-Vinit = sp.Matrix(nvars+2, 1, vars_list_init)
+Vinit = sp.Matrix(nvars + 2, 1, vars_list_init)
 pvar("Vinit[:nvars+1, :].transpose().col_join(Ainit)".format(step))
 
 binit = sp.Matrix(M.shape[0], 1, b)
 pvar('binit')
 
 # fonction à maximiser
-cTinit = sp.Matrix(1, nvars+1, [0]*nvars+[-1])
+cTinit = sp.Matrix(1, nvars + 1, [0] * nvars + [-1])
 pvar('Vinit[:nvars+1, :].transpose().col_join(cTinit)')
 
 pvar("Vinit.transpose().col_join(Ainit.row_join(binit))".format(step))
@@ -143,7 +142,7 @@ pvar("Vinit.transpose().col_join(Ainit.row_join(binit))".format(step))
 
 #  variables en base pour commencer sont donc:
 solinit = list()
-solinit.append(simplex_step(_A=Ainit, _b=binit, _cT=cTinit, _InB=[i-1 for i in [ 6, 7, 8, 9, 10, 12 ]]))
+solinit.append(simplex_step(_A=Ainit, _b=binit, _cT=cTinit, _InB=[i - 1 for i in [6, 7, 8, 9, 10, 12]]))
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
 print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, b00],
@@ -162,7 +161,7 @@ solinit.append([])
 solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _b=solinit[step - 1]['Binvb'],
                              _cT=solinit[step - 1]['cT'],
-                             _InB=[i - 1 for i in [ 1, 6, 7, 9, 10, 12 ]])
+                             _InB=[i - 1 for i in [1, 6, 7, 9, 10, 12]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
 print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0,   x1, x2,   x3,   x4, x5, x6,   x7, x8, x9,  x10, x11,  b00],
@@ -182,7 +181,7 @@ solinit.append([])
 solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _b=solinit[step - 1]['Binvb'],
                              _cT=solinit[step - 1]['cT'],
-                             _InB=[i - 1 for i in [ 1, 4, 7, 9, 10, 12 ]])
+                             _InB=[i - 1 for i in [1, 4, 7, 9, 10, 12]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
 print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1,   x2, x3,  x4,   x5, x6, x7, x8, x9,  x10, x11, b00],
@@ -201,7 +200,7 @@ solinit.append([])
 solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _b=solinit[step - 1]['Binvb'],
                              _cT=solinit[step - 1]['cT'],
-                             _InB=[i - 1 for i in [ 1, 3, 4, 7, 9, 12 ]])
+                             _InB=[i - 1 for i in [1, 3, 4, 7, 9, 12]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
 print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8,   x9,  x10, x11, b00],
@@ -220,7 +219,7 @@ solinit.append([])
 solinit[step] = simplex_step(_A=solinit[step - 1]['BinvA'],
                              _b=solinit[step - 1]['Binvb'],
                              _cT=solinit[step - 1]['cT'],
-                             _InB=[i - 1 for i in [ 1, 3, 4, 5, 7, 9 ]])
+                             _InB=[i - 1 for i in [1, 3, 4, 5, 7, 9]])
 pvar("Vinit.transpose().col_join(solinit[{}]['tableau'])".format(step))
 print(sp.latex(Vinit.transpose().col_join(solinit[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8,   x9,  x10, x11, b00],
@@ -239,7 +238,7 @@ pvar("solinit[{}]['InB']".format(step))
 # La base
 # [0, 2, 3, 4, 6, 8] => à reporter dans la base initiale
 # phase 2 du simplex
-
+last_step_init = step
 
 step = 0
 sol_real = list()
@@ -253,6 +252,12 @@ pvar("sp.latex(V.transpose().col_join(Atab), mode='equation*')")
 # [-2,  1,  0, -1,  0,  0,  0,  0,  1,  0,   0],
 # [ 1, -1,  0,  0, -1,  0,  0,  0,  0,  1,   0],
 # [-1,  1,  0,  0, -1,  0,  0,  0,  0,  0,   1]])
+#
+# Le tableau complet
+tabcomplet = Vtab.transpose().col_join(
+    Atab.col_join(cT).row_join(b.col_join(cT * solinit[last_step_init]['xsol'][:nvars, :])))
+print(sp.latex(tabcomplet, mode='equation*'))
+
 # au vu du tableau, on peut faire entrer 2 en base et faire sortir 3
 sol_real.append([])
 sol_real[step] = simplex_step(_A=Atab,
@@ -276,9 +281,9 @@ pvar("sol_real[{}]['xsol'].transpose()".format(step))
 step = 1
 sol_real.append([])
 sol_real[step] = simplex_step(_A=sol_real[step - 1]['BinvA'],
-                             _b=sol_real[step - 1]['Binvb'],
-                             _cT=sol_real[step - 1]['cT'],
-                             _InB=[0, 3, 4, 6, 8, 9])  # indices 0 based
+                              _b=sol_real[step - 1]['Binvb'],
+                              _cT=sol_real[step - 1]['cT'],
+                              _InB=[0, 3, 4, 6, 8, 9])  # indices 0 based
 pvar("Vtab.transpose().col_join(sol_real[{}]['tableau'])".format(step))
 print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, b00],
@@ -294,9 +299,9 @@ print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equat
 step = 2
 sol_real.append([])
 sol_real[step] = simplex_step(_A=sol_real[step - 1]['BinvA'],
-                             _b=sol_real[step - 1]['Binvb'],
-                             _cT=sol_real[step - 1]['cT'],
-                             _InB=[1, 3, 4, 6, 8, 9])  # indices 0 based
+                              _b=sol_real[step - 1]['Binvb'],
+                              _cT=sol_real[step - 1]['cT'],
+                              _InB=[1, 3, 4, 6, 8, 9])  # indices 0 based
 pvar("Vtab.transpose().col_join(sol_real[{}]['tableau'])".format(step))
 print(sp.latex(Vtab.transpose().col_join(sol_real[step]['tableau']), mode='equation*'))
 # [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, b00],

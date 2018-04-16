@@ -218,6 +218,7 @@ def alcohol_interval(val):
     elif val>13.5 and val <= 15.:
         return '(13.5.,15.]'
 
+
 # il faut bien créer une nouvelle instance de DF, sinon sans pd.DataFrame(),
 #  Data2 est un slice logique sur Data et python refuse d'appliquer une réaffectation de la colonne alcohol
 Data2 = pd.DataFrame(Data[['class','alcohol']])
@@ -230,7 +231,6 @@ alcohol_subserie_freq.name
 
 # df = pd.DataFrame([{'a': 15, 'b': 15, 'c': 5}, {'a': 20, 'b': 10, 'c': 7}, {'a': 25, 'b': 30, 'c': 9}])
 # df['a'] = df['a'].map(lambda a: a / 2.)
-
 
 
 # (9). Affichez le nuage de points des variables flavanoids et total_phenols et le nuage de points

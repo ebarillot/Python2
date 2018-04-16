@@ -9,7 +9,7 @@ import numpy as np
 ar = np.arange(15);
 ar
 
-# [::-1] : permet d'inverser l'irdre des éléments
+# [::-1] : permet d'inverser l'ordre des éléments
 ar2 = np.arange(0, -10, -1)[::-1];
 ar2
 

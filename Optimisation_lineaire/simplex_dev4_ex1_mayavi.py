@@ -3,6 +3,8 @@
 
 import numpy as np
 from mayavi import mlab
+from scipy.optimize import fmin
+import math
 
 
 def f(x, y):
@@ -10,7 +12,7 @@ def f(x, y):
 
 
 # calcul et affichage de f()
-xf, yf = np.mgrid[-1.:1.05:0.05, -1.:1.05:0.05]
+xf, yf = np.mgrid[-3.:3.05:0.05, -3.:3.05:0.05]
 zf = f(xf, yf)
 sf = mlab.surf(xf, yf, zf, colormap='copper')
 # sf = mlab.surf(xf, yf, zf, warp_scale="auto", colormap='copper')  # voir à quoi sert warp_scale="auto"
@@ -19,6 +21,19 @@ print(xf.min(), xf.max())
 print(yf.min(), yf.max())
 print(zf.min(), zf.max())
 
+
+#  calcul du minimum à partir de la fonction transformée pour accepter un tableau en entrée
+# x -> x[0]
+# y -> x[1]
+def ftab(x):
+    return x[0]*x[0]*x[0]*x[0] + x[1]*x[1]*x[1]*x[1] -2*(x[0]-x[1])*(x[0]-x[1])
+
+
+print(fmin(ftab,np.array([1,0])))
+print(fmin(ftab,np.array([0,1])))
+
+
+# Affichage 3D
 eng = mlab.get_engine()
 fig = mlab.gcf(engine=eng)
 mlab.axes(figure=fig,
@@ -41,7 +56,7 @@ mlab.axes(figure=fig,
 # eng.add_filter(cut_plane1, warp_scalar)
 
 # calcul et affichage des plans
-Rmax = 1.
+Rmax = 100.
 drplane, dphi = Rmax / 250.0, np.pi / 250.0
 [rplane, phi] = np.mgrid[0:Rmax:drplane, 0:2.*np.pi+dphi*1.5:dphi]
 xplane = rplane * np.cos(phi)
@@ -55,3 +70,5 @@ sx = mlab.mesh(z0plane, xplane, yplane, colormap='black-white', opacity=0.9)
 mlab.outline(figure=fig, extent=(-Rmax, Rmax, -Rmax, Rmax, -Rmax, Rmax))
 
 mlab.show()
+
+

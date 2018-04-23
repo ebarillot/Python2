@@ -68,6 +68,7 @@ obs[obs <= 2.].mean()
 
 
 # représentation conjointe de 2 séries
+# générées à partir d'une distribution théorique (calculée)
 xvar = pd.Series(np.random.randn(1000))
 yvar = pd.Series(np.random.exponential(1,1000))
 df = pd.DataFrame({'x': xvar, 'y': yvar})
@@ -83,4 +84,4 @@ plt.close()
 
 
 # correlation de deux séries
-df.corr().loc
+df.corr().iloc[0,1]

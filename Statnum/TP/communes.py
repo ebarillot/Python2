@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 if os.path.basename(os.getcwd()) != 'Statnum':
     os.chdir('./Statnum')
 
-
 # https://www.data.gouv.fr/fr/datasets/data-insee-sur-les-communes/
 # dataset = pd.read_excel('TP/MDB-INSEE-V2.xlsx', sheet_name='Feuil1', converters={u'Urbanité Ruralité': unicode})
 # dataset = pd.read_excel('TP/MDB-INSEE-V2.xlsx', sheet_name='Feuil1', dtype={u'Urbanité Ruralité': str})
@@ -34,7 +33,6 @@ df.head(5)
 df.columns.values
 df.dtypes
 print(df.dtypes)
-
 
 df1 = pd.DataFrame(df, columns=['CODGEO',
                                 'Orientation Economique',
@@ -90,6 +88,12 @@ df1.head(5)
 df1.describe()
 df1.info(verbose=True)
 
+df1['Nb praticiens'] = df1['Nb Omnipraticiens BV'] \
+                       + df1['Nb Infirmiers Libéraux BV'] \
+                       + df1['Nb dentistes Libéraux BV'] \
+                       + df1['Nb pharmaciens Libéraux BV']
+df1[['Nb Atifs', 'Population','Nb praticiens','Nb propriétaire']].corr(method='pearson')
+
 
 df2 = pd.DataFrame(df, columns=['CODGEO',
                                 'Orientation Economique',
@@ -106,6 +110,19 @@ df2 = pd.DataFrame(df, columns=['CODGEO',
 df2.head(5)
 df2.describe()
 df1.info(verbose=True)
-df2[u'Urbanité Ruralité']
+df2['Urbanité Ruralité']
 
-
+df3 = pd.DataFrame(df, columns=['CODGEO',
+                                'Orientation Economique',
+                                'Urbanité Ruralité',
+                                'LIBGEO',
+                                'REG',
+                                'DEP'])
+df3['Nb praticiens'] = df['Nb Omnipraticiens BV'] \
+                       + df['Nb Infirmiers Libéraux BV'] \
+                       + df['Nb dentistes Libéraux BV'] \
+                       + df['Nb pharmaciens Libéraux BV']
+df3['Population'] = df['Population']
+df3['Nb Atifs'] = df['Nb Atifs']
+df3[['Nb praticiens', 'Population']].corr(method='pearson')
+df3[['Nb Atifs', 'Population','Nb praticiens']].corr(method='pearson')

@@ -12,7 +12,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from IPython.display import display, Math, Latex
 
 # from sklearn.datasets import load_wine
 # vins = load_wine()

@@ -1,40 +1,48 @@
 # coding=utf-8
 
+from __future__ import unicode_literals
+#
+# ATTENTION avec l'utilisation des strings en unicode
+# quand on active:  from __future__ import unicode_literals
+# l'unicode en fonctionne pas dans la clé des définitions des dtypes
+# Il faut que les chaines des clés soient encodées (ou préfixées par b)
+#
 import pandas as pd
 import numpy as np
+
 
 #  exemples tirés du livre Mastering Pandas
 
 # complex slicing
-ar = np.arange(15);
+ar = np.arange(15)
 ar
 
 # [::-1] : permet d'inverser l'ordre des éléments
-ar2 = np.arange(0, -10, -1)[::-1];
+ar2 = np.arange(0, -10, -1)[::-1]
 ar2
 
 # remplace les 10 1ers éléments dans ar par les éléments de ar2
-ar[:10] = ar2;
+ar[:10] = ar2
 ar
 
 # copies and views
-ar1 = np.arange(12);
+ar1 = np.arange(12)
 ar1
-ar2 = ar1[::2];
+ar2 = ar1[::2]
 ar2
-ar2[1] = -1;
+ar2[1] = -1
 ar1  # tableau modifié
 
-ar = np.arange(8);
+ar = np.arange(8)
 ar
-arc = ar[:3].copy();
+arc = ar[:3].copy()
 arc
-arc[0] = -1;
+arc[0] = -1
 arc
 ar  # non modifié
 
 # Transposition
-ar = np.array([[1, 2, 3], [4, 5, 6]]);
+ar = np.array([[1, 2, 3], [4, 5, 6]])
 ar
 ar.T
 
@@ -48,21 +56,21 @@ np.all(ar == ar2)
 ar = np.arange(1, 5)
 ar.prod()
 
-ar = np.array([np.arange(1, 6), np.arange(1, 6)]);
+ar = np.array([np.arange(1, 6), np.arange(1, 6)])
 ar
 # Columns
 np.prod(ar, axis=0)
 # Rows
 np.prod(ar, axis=1)
 
-ar = np.array([[2, 3, 4], [5, 6, 7], [8, 9, 10]]);
+ar = np.array([[2, 3, 4], [5, 6, 7], [8, 9, 10]])
 ar.sum()
 ar.mean()
 np.median(ar)
 
 # Statistical operators
 np.random.seed(10)
-ar = np.random.randint(0, 10, size=(4, 5));
+ar = np.random.randint(0, 10, size=(4, 5))
 ar
 ar.mean()
 ar.std()
@@ -70,7 +78,7 @@ ar.var(axis=0)  # across rows
 ar.cumsum()
 
 # Flattening a multi-dimensional array
-ar = np.array([np.arange(1, 6), np.arange(10, 15)]);
+ar = np.array([np.arange(1, 6), np.arange(10, 15)])
 ar
 ar.ravel()
 ar.T.ravel()
@@ -78,15 +86,15 @@ ar.T.ravel()
 # copy while np.ravel returns a view
 
 # Reshaping
-ar = np.arange(1, 16);
+ar = np.arange(1, 16)
 ar
 ar.reshape(3, 5)
 
 # Resizing
-ar = np.arange(5);
-ar.resize((8,));
+ar = np.arange(5)
+ar.resize((8,))
 ar
-ar = np.arange(5);
+ar = np.arange(5)
 ar
 
 ar2 = ar
@@ -94,24 +102,24 @@ ar.resize((8,))  # ==> ValueError
 np.resize(ar, (8,))  # marche
 
 # Adding a dimension
-ar = np.array([14, 15, 16]);
+ar = np.array([14, 15, 16])
 ar.shape
 ar
 
-ar = ar[:, np.newaxis];
+ar = ar[:, np.newaxis]
 ar.shape
 ar
 
 # Array sorting
 # Sort the array along an axis; 뽸rst, let's discuss this along the y-axis:
-ar = np.array([[3, 2], [10, -1]]);
+ar = np.array([[3, 2], [10, -1]])
 ar
-ar.sort(axis=1);
+ar.sort(axis=1)
 ar
 # Here, we will explain the sorting along the x-axis
-ar = np.array([[3, 2], [10, -1]]);
+ar = np.array([[3, 2], [10, -1]])
 ar
-ar.sort(axis=0);
+ar.sort(axis=0)
 ar
 
 # Sorting by in -place(np.array.sort) and out - of - place(np.sort) functions.
@@ -128,18 +136,20 @@ ar
 np.any(ar)  # or entre élements
 np.all(ar)  # and entre élements
 
+
+# #########################################################
 # #########################################################
 # Data structures in pandas
 # Series: Series is really a 1D NumPy array under the hood. It consists of a NumPy array
 # coupled with an array of labels
 np.random.seed(100)
-ser = pd.Series(np.random.rand(7));
+ser = pd.Series(np.random.rand(7))
 ser
 
 import calendar as cal
 
 monthNames = [cal.month_name[i] for i in np.arange(1, 6)]
-months = pd.Series(np.arange(1, 6), index=monthNames);
+months = pd.Series(np.arange(1, 6), index=monthNames)
 months
 months.index
 
@@ -148,7 +158,7 @@ currDict = {'US'     : 'dollar', 'UK': 'pound',
             'Germany': 'euro', 'Mexico': 'peso',
             'Nigeria': 'naira',
             'China'  : 'yuan', 'Japan': 'yen'}
-currSeries = pd.Series(currDict);
+currSeries = pd.Series(currDict)
 currSeries
 currSeries.index
 
@@ -173,7 +183,7 @@ dogSeries = pd.Series('chihuahua',
 dogSeries
 dogSeries.index
 
-dogSeries = pd.Series('pekingese');
+dogSeries = pd.Series('pekingese')
 dogSeries
 type(dogSeries)
 
@@ -240,19 +250,17 @@ stockSummaries = {
     'AAPL': pd.Series([501.53, 40.32, 892.45, 12.44, 447.59, 0.84],
                       index=['Closing price', 'EPS', 'Shares Outstanding(M)', 'P/E',
                              'Market Cap(B)', 'Beta'])}
-stockDF = pd.DataFrame(stockSummaries);
+stockDF = pd.DataFrame(stockSummaries)
 stockDF
 
-stockDF = pd.DataFrame(stockSummaries,
-                       index=['Closing price', 'EPS',
-                              'Shares Outstanding(M)',
-                              'P/E', 'Market Cap(B)', 'Beta']);
+stockDF = pd.DataFrame(stockSummaries, index=['Closing price', 'EPS',
+                                              'Shares Outstanding(M)',
+                                              'P/E', 'Market Cap(B)', 'Beta']);
 stockDF
 
-stockDF = pd.DataFrame(stockSummaries,
-                       index=['Closing price', 'EPS',
-                              'Shares Outstanding(M)',
-                              'P/E', 'Market Cap(B)', 'Beta'],
+stockDF = pd.DataFrame(stockSummaries, index=['Closing price', 'EPS',
+                                              'Shares Outstanding(M)',
+                                              'P/E', 'Market Cap(B)', 'Beta'],
                        columns=['FB', 'TWTR', 'SCNW'])
 stockDF
 stockDF.index
@@ -268,20 +276,27 @@ algos = {'search'          : ['DFS', 'BFS', 'Binary Search',
                               'Logistic Regression',
                               'K-Means Clustering',
                               'Linear Regression']}
-algoDF = pd.DataFrame(algos);
+algoDF = pd.DataFrame(algos)
 algoDF
+algoDF.index
+algoDF.columns
 pd.DataFrame(algos, index=['algo_1', 'algo_2', 'algo_3', 'algo_4', 'algo_5'])
 
+
 # Using a structured array
-memberData = np.zeros((4,),
-                      dtype=[('Name', 'a15'),
-                             ('Age', 'i4'),
-                             ('Weight', 'f4')])
+#
+# ATTENTION avec l'utilisation des strings en unicode
+# quand on active:  from __future__ import unicode_literals
+# l'unicode en fonctionne pas dans la clé des définitions des dtypes
+# Il faut que les chaines des clés soient encodées (ou préfixées par b)
+#
+memberData = np.zeros((4,), dtype=[(b'Name', 'a15'), (b'Age', 'i4'), (b'Weight', 'f4')])
+memberData
 memberData[:] = [('Sanjeev', 37, 162.4),
                  ('Yingluck', 45, 137.8),
                  ('Emeka', 28, 153.2),
                  ('Amy', 67, 101.3)]
-memberDF = pd.DataFrame(memberData);
+memberDF = pd.DataFrame(memberData)
 memberDF
 pd.DataFrame(memberData, index=['a', 'b', 'c', 'd'])
 
@@ -289,6 +304,8 @@ pd.DataFrame(memberData, index=['a', 'b', 'c', 'd'])
 currSeries.name = 'currency'
 pd.DataFrame(currSeries)
 
+
+##############################################################################
 # DataFrame.from_dict: It takes a dictionary of dictionaries or sequences and
 # returns DataFrame.
 # •  DataFrame.from_records: It takes a list of tuples or structured ndarray.
@@ -308,21 +325,22 @@ pd.DataFrame(currSeries)
 memberDF['Name']
 
 # Assignment
-memberDF['Height'] = 60;
+memberDF['Height'] = 60
 memberDF
 
 # Deletion
-del memberDF['Height'];
+del memberDF['Height']
 memberDF
 
 memberDF['BloodType'] = 'O'
-bloodType = memberDF.pop('BloodType');
+bloodType = memberDF.pop('BloodType')
 bloodType
+type(bloodType)
 
 # Basically, a DataFrame structure can be treated as if it were a dictionary of Series
 # objects. Columns get inserted at the end; to insert a column at a speci欠c location,
 # you can use the insert function:
-memberDF.insert(2, 'isSenior', memberDF['Age'] > 60);
+memberDF.insert(2, 'isSenior', memberDF['Age'] > 60)
 memberDF
 
 # Alignment
@@ -353,7 +371,7 @@ SpotCrudePrices_2013_Data = {'U.K. Brent'             : {'2013-Q1': 112.9, '2013
 SpotCrudePrices_2013 = pd.DataFrame.from_dict(SpotCrudePrices_2013_Data)
 SpotCrudePrices_2013
 
-dubaiPrices = SpotCrudePrices_2013['Dubai'];
+dubaiPrices = SpotCrudePrices_2013['Dubai']
 dubaiPrices
 
 SpotCrudePrices_2013[['West Texas Intermediate', 'U.K. Brent']]
@@ -383,12 +401,12 @@ SpotCrudePrices_2013
 SpotCrudePrices_2013[:2]
 SpotCrudePrices_2013[2:]
 SpotCrudePrices_2013[::2]
-SpotCrudePrices_2013[::-1]
+SpotCrudePrices_2013[::-1]  # ordonne dans l'ordre inverse
 dubaiPrices = SpotCrudePrices_2013['Dubai']
 
 dubaiPrices[1:]
 dubaiPrices[:-1]
-dubaiPrices[::-1]
+dubaiPrices[::-1]  # ordonne dans l'ordre inverse
 
 # Label, integer, and mixed indexing
 # •  The .loc operator: It allows label-oriented indexing
@@ -396,23 +414,20 @@ dubaiPrices[::-1]
 # •  The .ix operator: It allows mixed label and integer-based indexing
 
 # Label-oriented indexing .loc
-NYC_SnowAvgsData = {'Months'           :
-                        ['January', 'February', 'March',
-                         'April', 'November', 'December'],
+NYC_SnowAvgsData = {'Months'           : ['January', 'February', 'March', 'April', 'November', 'December'],
                     'Avg SnowDays'     : [4.0, 2.7, 1.7, 0.2, 0.2, 2.3],
                     'Avg Precip. (cm)' : [17.8, 22.4, 9.1, 1.5, 0.8, 12.2],
                     'Avg Low Temp. (F)': [27, 29, 35, 45, 42, 32]}
 NYC_SnowAvgs = pd.DataFrame(NYC_SnowAvgsData,
                             index=NYC_SnowAvgsData['Months'],
-                            columns=['Avg SnowDays', 'Avg Precip. (cm)',
-                                     'Avg Low Temp. (F)'])
+                            columns=['Avg SnowDays', 'Avg Precip. (cm)', 'Avg Low Temp. (F)'])
 NYC_SnowAvgs
 NYC_SnowAvgs.loc['January']
 NYC_SnowAvgs.loc[['January', 'April']]
 NYC_SnowAvgs.loc['January':'March']
 
 # Note that while using the .loc, .iloc, and .ix operators on a DataFrame, the row
-# index must always be speci湥ed 湥rst. This is the opposite of the [] operator, where
+# index must always be specified first. This is the opposite of the [] operator, where
 # only columns can be selected directly. Hence, we get an error if we do the following:
 NYC_SnowAvgs.loc['Avg SnowDays']  # ==> KeyError
 NYC_SnowAvgs.loc[:, 'Avg SnowDays']  # syntaxe correcte pour toutes les lignes
@@ -420,8 +435,8 @@ NYC_SnowAvgs.loc[:, 'Avg SnowDays']  # syntaxe correcte pour toutes les lignes
 NYC_SnowAvgs.loc['March', 'Avg SnowDays']  # une cellule ligne,colonne
 NYC_SnowAvgs.loc['March']['Avg SnowDays']
 NYC_SnowAvgs['Avg SnowDays']['March']
-NYC_SnowAvgs['March'][
-    'Avg SnowDays']  # KeyError, car avec cette syntaxe il faut spécifier le nom de la série (colonne) d'abord
+NYC_SnowAvgs['March']['Avg SnowDays']
+# ==> KeyError, car avec cette syntaxe il faut spécifier le nom de la série (colonne) d'abord
 NYC_SnowAvgs['March']  # même KeyError
 NYC_SnowAvgs.loc['March']  # fonctionne
 
@@ -501,12 +516,11 @@ dfd.iloc[[0, 2], dfd.columns.get_indexer(['A', 'B'])]  # plusieurs indexers
 # dimensions by using data structures such as Series and DataFrame
 import os
 
-if os.path.basename(os.getcwd()) != 'Pandas':
-    os.chdir('./Pandas')
+if os.path.basename(os.getcwd()) != 'Pandas': os.chdir('./Pandas')
 print(os.getcwd())
 sharesIndexDataDF = pd.read_csv('data/stock_index_prices.csv')
 sharesIndexDF = sharesIndexDataDF.set_index(['TradingDate', 'PriceType'])
-mIndex = sharesIndexDF.index;
+mIndex = sharesIndexDF.index
 mIndex  # index à deux niveaux hiérarchiques
 # we see that the MultiIndex consists of a list of tuples.
 
@@ -519,8 +533,9 @@ sharesIndexDF.loc['2014/02/21':'2014/02/24']
 # try slicing at a lower level:
 sharesIndexDF.loc[('2014/02/21', 'open'):('2014/02/24', 'open')]  # ==> UnsortedIndexError car index non trié
 sharesIndexDF.sortlevel(0).loc[('2014/02/21', 'open'):('2014/02/24', 'open')]  # marche !
+sharesIndexDF.sort_index(level=0).loc[('2014/02/21', 'open'):('2014/02/24', 'open')]  # marche !
 # sortlevel() method sorts the labels of an axis within a MultiIndex
-# To be on the safe side, sort ꤪrst before slicing with a MultiIndex
+# To be on the safe side, sort first before slicing with a MultiIndex
 
 # We can also pass a list of tuples
 sharesIndexDF.ix[[('2014/02/21', 'close'), ('2014/02/24', 'open')]]
@@ -529,9 +544,7 @@ sharesIndexDF.ix[[('2014/02/21', 'close'), ('2014/02/24', 'open')]]
 swappedDF = sharesIndexDF[:7].swaplevel(0, 1, axis=0)
 
 # reorder_levels function is more general, allowing you to specify the order of the levels
-reorderedDF = sharesIndexDF[:7].reorder_levels(['PriceType',
-                                                'TradingDate'],
-                                               axis=0)
+reorderedDF = sharesIndexDF[:7].reorder_levels(['PriceType', 'TradingDate'], axis=0)
 reorderedDF
 
 # Cross sections
@@ -579,9 +592,9 @@ aussieMammalsDF[nativeMarsupialMask]
 
 # Using the where() method
 np.random.seed(100)
-normvals = pd.Series([np.random.normal() for i in np.arange(10)])   # ATTENTION: Serie
+normvals = pd.Series([np.random.normal() for i in np.arange(10)])  # ATTENTION: Serie
 normvals
-normvals[normvals>0]
+normvals[normvals > 0]
 normvals.where(normvals > 0)
 
 np.random.seed(100)
@@ -591,16 +604,17 @@ normDF = pd.DataFrame([[round(np.random.normal(), 3) for i in
 normDF
 normDF[normDF > 0]  # pas besoin de where() sur une DF pour avoir des NaN
 normDF.where(normDF > 0)
-normDF.mask(normDF>0)   # mask() est l'inverse de where()
+normDF.mask(normDF > 0)  # mask() est l'inverse de where()
 
 # Operations on indexes
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-stockIndexDataDF=pd.read_csv('data/stock_index_closing.csv')
+stockIndexDataDF = pd.read_csv('data/stock_index_closing.csv')
 stockIndexDataDF
-stockIndexDF=stockIndexDataDF.set_index('TradingDate')
+stockIndexDF = stockIndexDataDF.set_index('TradingDate')
 stockIndexDF
 type(stockIndexDF)
 stockIndexDF.reset_index()  # reset_index() défait l'index fabriqué avec set_index()
@@ -614,33 +628,35 @@ type(stockIndexDF.reset_index())
 # •  Aggregating or combining the data
 # The result of a groupby operation is not a DataFrame but dict of DataFrame objects
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-uefaDF=pd.read_csv('data/euro_winners.csv')
+uefaDF = pd.read_csv('data/euro_winners.csv')
 uefaDF.head()
 nationsGrp = uefaDF.groupby('Nation')
 type(nationsGrp)
 nationsGrp.groups
 
 len(nationsGrp.groups)
-nationWins=nationsGrp.size()
+nationWins = nationsGrp.size()
 nationWins.sort_values(ascending=False)
 type(nationWins)
 nationWins
 
 winnersGrp = uefaDF.groupby(['Nation', 'Winners'])
-clubWins=winnersGrp.size()
+clubWins = winnersGrp.size()
 clubWins.sort_values(ascending=False)
 type(clubWins)
 clubWins
 
 # advanced group by
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-goalStatsDF=pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
+goalStatsDF = pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
 goalStatsDF = goalStatsDF.set_index('Month')
 goalStatsDF.head(3)
 goalStatsDF.tail(3)
@@ -655,16 +671,16 @@ for name, group in goalStatsGroupedByMonth:
     print group
     print "\n"
 
-goalStatsDF=goalStatsDF.reset_index()
-goalStatsDF=goalStatsDF.set_index(['Month','Stat'])
+goalStatsDF = goalStatsDF.reset_index()
+goalStatsDF = goalStatsDF.set_index(['Month', 'Stat'])
 monthStatGroup = goalStatsDF.groupby(level=['Month', 'Stat'])
 for name, group in monthStatGroup:
     print name
     print group
 
 # Using groupby with a MultiIndex
-goalStatsDF2=pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
-goalStatsDF2=goalStatsDF2.set_index(['Month','Stat'])
+goalStatsDF2 = pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
+goalStatsDF2 = goalStatsDF2.set_index(['Month', 'Stat'])
 print goalStatsDF2.head(3)
 print goalStatsDF2.tail(3)
 grouped2 = goalStatsDF2.groupby(level='Stat')
@@ -674,22 +690,21 @@ for name, group in grouped2:
     print group
 
 goalStatsDF2.sum(level='Stat')
-totalsDF=grouped2.sum()
+totalsDF = grouped2.sum()
 totalsDF.loc['GoalsScored'] / totalsDF.loc['MatchesPlayed']
 
 # Obtain goals per game data as a DataFrame. Note that we have to transpose it since gpg is returned as a Series
-gpg=totalsDF.loc['GoalsScored']/totalsDF.loc['MatchesPlayed']
-goalsPerGameDF=pd.DataFrame(gpg).T
+gpg = totalsDF.loc['GoalsScored'] / totalsDF.loc['MatchesPlayed']
+goalsPerGameDF = pd.DataFrame(gpg).T
 goalsPerGameDF
 
 # Reindex the goalsPerGameDF DataFrame so that the 0 index is replaced by GoalsPerGame
-goalsPerGameDF=goalsPerGameDF.rename(index={0:'GoalsPerGame'})
+goalsPerGameDF = goalsPerGameDF.rename(index={0: 'GoalsPerGame'})
 goalsPerGameDF
 
 # Append the goalsPerGameDF DataFrame to the original one:
-pd.options.display.float_format='{:.2f}'.format
+pd.options.display.float_format = '{:.2f}'.format
 totalsDF.append(goalsPerGameDF)
-
 
 # Using the aggregate method
 # Another way to generate summary statistics is by using the aggregate method explicitly
@@ -702,7 +717,7 @@ grouped2.aggregate(np.sum)
 # For a grouped DataFrame object, we can specify a list of functions to be applied to each column
 grouped2.agg([np.sum, np.mean, np.size])
 
-nationsGrp['Attendance'].agg({'Total':np.sum, 'Average':np.mean, 'Deviation':np.std})   # will be deprecated
+nationsGrp['Attendance'].agg({'Total': np.sum, 'Average': np.mean, 'Deviation': np.std})  # will be deprecated
 
 # The transform() method
 # The groupby-transform function is used to perform transformation operations on
@@ -710,24 +725,24 @@ nationsGrp['Attendance'].agg({'Total':np.sum, 'Average':np.mean, 'Deviation':np.
 # using the fillna method. The resulting object after using transform has the same
 # size as the original groupby objec
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-goalStatsDF3=pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
-goalStatsDF3=goalStatsDF3.set_index(['Month'])
-goalsScoredDF=goalStatsDF3.loc[goalStatsDF3['Stat']=='GoalsScored']
-goalsScoredDF.iloc[:,1:]
+goalStatsDF3 = pd.read_csv('data/goal_stats_euro_leagues_2012-13.csv')
+goalStatsDF3 = goalStatsDF3.set_index(['Month'])
+goalsScoredDF = goalStatsDF3.loc[goalStatsDF3['Stat'] == 'GoalsScored']
+goalsScoredDF.iloc[:, 1:]
 
-goalsScoredPerYearGrp=goalsScoredDF.groupby(lambda Month: Month.split('/')[2])
+goalsScoredPerYearGrp = goalsScoredDF.groupby(lambda Month: Month.split('/')[2])
 goalsScoredPerYearGrp.mean()
 goalsScoredPerYearGrp.count()
 fill_fcn = lambda x: x.fillna(x.mean())
 trans = goalsScoredPerYearGrp.transform(fill_fcn)
-tGroupedStats = trans.groupby(lambda Month:   Month.split('/')[2])
+tGroupedStats = trans.groupby(lambda Month: Month.split('/')[2])
 tGroupedStats.mean()
 
 tGroupedStats.count()
-
 
 # Filtering
 # The Ƿlter method enables us to apply Ƿltering on a groupby object that results in
@@ -756,59 +771,67 @@ goalsScoredDF.groupby(level='Month').filter(lambda x: np.all([x[col] > 100 for c
 # • The keys function: This specifies a list of keys to be used to construct
 # a MultiIndex.
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-stockDataDF = pd.read_csv('data/tech_stockprices.csv').set_index(['Symbol']);stockDataDF
+stockDataDF = pd.read_csv('data/tech_stockprices.csv').set_index(['Symbol']);
+stockDataDF
 # A=stockDataDF.ix[:4, ['Closing price', 'EPS']]; A # syntaxe .ix obsolète remplacée par la ligne suivante:
-A = stockDataDF.loc[stockDataDF.index[:4], ['Closing price', 'EPS']]; A   # avec loc
-A = stockDataDF.iloc[:4, stockDataDF.columns.get_indexer(['Closing price', 'EPS'])]; A    # avec iloc
+A = stockDataDF.loc[stockDataDF.index[:4], ['Closing price', 'EPS']];
+A  # avec loc
+A = stockDataDF.iloc[:4, stockDataDF.columns.get_indexer(['Closing price', 'EPS'])];
+A  # avec iloc
 
 # B = stockDataDF.ix[2:-2, ['P/E']];B   # .ix deprecated
-B = stockDataDF.iloc[2:-2, stockDataDF.columns.get_indexer(['P/E'])]; B    # avec iloc
+B = stockDataDF.iloc[2:-2, stockDataDF.columns.get_indexer(['P/E'])];
+B  # avec iloc
 
 # C=stockDataDF.ix[1:5, ['Market Cap(B)']];C
-C = stockDataDF.iloc[1:5, stockDataDF.columns.get_indexer(['Market Cap(B)'])]; C    # avec iloc
+C = stockDataDF.iloc[1:5, stockDataDF.columns.get_indexer(['Market Cap(B)'])];
+C  # avec iloc
 
 # Here, we perform a concatenation by specifying an outer join, which concatenates
 # and performs a union on all the three data frames, and includes entries that do not
 # have values for all the columns by inserting NaN for such columns:
-pd.concat([A,B,C],axis=1) # outer join
+pd.concat([A, B, C], axis=1)  # outer join
 
 # We can also specify an inner join that does the concatenation, but only includes rows
 # that contain values for all the columns in the final data frame by throwing out rows
 # with missing columns, that is, it takes the intersection:
-pd.concat([A,B,C],axis=1, join='inner') # Inner join ==> pas de NaN dans le DF résultat
-
+pd.concat([A, B, C], axis=1, join='inner')  # Inner join ==> pas de NaN dans le DF résultat
 
 # The third case enables us to use the specific index from the original DataFrame to join on:
 #  est-ce que ça veut dire que les A,B,C sont des vues et non des copies sur stockDataDF ?
 #  ainsi elle partagent bien les index ?
-np.shares_memory(stockDataDF,A) # ==> répond false pourtant ... donc A,B,C seraient indépendantes en mémoire
-np.shares_memory(stockDataDF.index,A.index) # répond True: les index seraient partagés
-pd.concat([A,B,C], axis=1, join_axes=[stockDataDF.index])
+np.shares_memory(stockDataDF, A)  # ==> répond false pourtant ... donc A,B,C seraient indépendantes en mémoire
+np.shares_memory(stockDataDF.index, A.index)  # répond True: les index seraient partagés
+pd.concat([A, B, C], axis=1, join_axes=[stockDataDF.index])
 A.index
 A.index
 
 np.random.seed(100)
-normDF=pd.DataFrame(np.random.randn(3,4));normDF
-binomDF=pd.DataFrame(np.random.binomial(100,0.5,(3,4)));binomDF
-poissonDF=pd.DataFrame(np.random.poisson(100,(3,4)));poissonDF
-rand_distribs=[normDF,binomDF,poissonDF]
-rand_distribsDF=pd.concat(rand_distribs,keys=['Normal','Binomial', 'Poisson']);rand_distribsDF
-
+normDF = pd.DataFrame(np.random.randn(3, 4));
+normDF
+binomDF = pd.DataFrame(np.random.binomial(100, 0.5, (3, 4)));
+binomDF
+poissonDF = pd.DataFrame(np.random.poisson(100, (3, 4)));
+poissonDF
+rand_distribs = [normDF, binomDF, poissonDF]
+rand_distribsDF = pd.concat(rand_distribs, keys=['Normal', 'Binomial', 'Poisson']);
+rand_distribsDF
 
 # Using append
 # The append function is a simpler version of concat that concatenates along axis=0
-stockDataA=stockDataDF.iloc[:2,:3]
+stockDataA = stockDataDF.iloc[:2, :3]
 stockDataA
-stockDataB=stockDataDF[2:]
+stockDataB = stockDataDF[2:]
 stockDataB
 stockDataA.append(stockDataB)
 
 # In order to maintain the order of columns similar to the original DataFrame, we can
 # apply the reindex function
-stockDataA.append(stockDataB).reindex(stockDataDF.columns,axis=1)
+stockDataA.append(stockDataB).reindex(stockDataDF.columns, axis=1)
 # The append function does not work in places, but it returns a new DataFrame with the second DataFrame
 # appended to the first
 
@@ -820,7 +843,7 @@ algoDF = pd.DataFrame(algos);
 algoDF
 moreAlgos = {'search'          : 'ShortestPath', 'sorting': 'Insertion Sort',
              'machine learning': 'Linear Regression'}
-algoDF.append(moreAlgos,ignore_index=True)
+algoDF.append(moreAlgos, ignore_index=True)
 # In order for this to work, you must pass the ignore_index=True argument so that the index [0,1,2,3] in algoDF is ignored.
 
 
@@ -848,47 +871,49 @@ algoDF.append(moreAlgos,ignore_index=True)
 # • The copy argument: The default True value causes data to be copied from
 # the passed DataFrame objects.
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-USIndexDataDF = pd.read_csv('data/us_index_data.csv');USIndexDataDF
-slice1=USIndexDataDF.iloc[:2,:3]
+USIndexDataDF = pd.read_csv('data/us_index_data.csv');
+USIndexDataDF
+slice1 = USIndexDataDF.iloc[:2, :3]
 slice1
-slice2=USIndexDataDF.iloc[:2,[0,3,4]]
+slice2 = USIndexDataDF.iloc[:2, [0, 3, 4]]
 slice2
-slice3=USIndexDataDF.iloc[[1,2],:3]
+slice3 = USIndexDataDF.iloc[[1, 2], :3]
 slice3
-pd.merge(slice1,slice2)
-pd.merge(slice3,slice2,how='inner')
-pd.merge(slice3,slice2,how='outer')
-pd.merge(slice3,slice2,how='left')
-pd.merge(slice3,slice2,how='right')
-
+pd.merge(slice1, slice2)
+pd.merge(slice3, slice2, how='inner')
+pd.merge(slice3, slice2, how='outer')
+pd.merge(slice3, slice2, how='left')
+pd.merge(slice3, slice2, how='right')
 
 # The join function
 # The DataFrame.join function is used to combine two DataFrames that have
 # different columns with nothing in common. Essentially, this does a longitudinal
 # join of two DataFrames
-slice_NASD_SP=USIndexDataDF.iloc[:4,:3]
+slice_NASD_SP = USIndexDataDF.iloc[:4, :3]
 slice_NASD_SP
-slice_Russ_DJIA=USIndexDataDF.iloc[:4,3:]
+slice_Russ_DJIA = USIndexDataDF.iloc[:4, 3:]
 slice_Russ_DJIA
 slice_NASD_SP.join(slice_Russ_DJIA)
-slice1.join(slice2) # ValueError: columns overlap but no suffix specified: Index([u'TradingDate'], dtype='object')
-
+slice1.join(slice2)  # ValueError: columns overlap but no suffix specified: Index([u'TradingDate'], dtype='object')
 
 # Pivots and reshaping data
 # This section deals with how you can reshape data. Sometimes, data is stored in
 # what is known as the stacked format
 import os
+
 if os.path.basename(os.getcwd()) != 'Pandas':
     os.chdir('./Pandas')
 print(os.getcwd())
-plantGrowthRawDF = pd.read_csv('data/PlantGrowth.csv');plantGrowthRawDF
-plantGrowthRawDF[plantGrowthRawDF['group']=='ctrl']
-plantGrowthRawDF.pivot(index='observation',columns='group',values='weight')
-pd.pivot_table(plantGrowthRawDF,values='weight',index='observation', columns=['group'])
-pd.pivot_table(plantGrowthRawDF,values='weight',columns=['group'],aggfunc=np.mean)
+plantGrowthRawDF = pd.read_csv('data/PlantGrowth.csv');
+plantGrowthRawDF
+plantGrowthRawDF[plantGrowthRawDF['group'] == 'ctrl']
+plantGrowthRawDF.pivot(index='observation', columns='group', values='weight')
+pd.pivot_table(plantGrowthRawDF, values='weight', index='observation', columns=['group'])
+pd.pivot_table(plantGrowthRawDF, values='weight', columns=['group'], aggfunc=np.mean)
 
 # autre exemple tiré de la doc python
 df = pd.DataFrame({"A": ["foo", "foo", "foo", "foo", "foo",
@@ -904,7 +929,6 @@ table = pd.pivot_table(df, values='D', index=['A', 'B'],
                        columns=['C'], aggfunc=np.sum)
 table
 
-
 # Stacking and unstacking
 # In addition to the pivot functions, the stack and unstack functions are also available
 # on Series and DataFrames, that work on objects containing MultiIndexes
@@ -912,7 +936,7 @@ table
 # The stack() function
 # First, we set the group and observation column values to be the components of the
 # row index respectively, which results in a MultiIndex:
-plantGrowthStackedDF=plantGrowthRawDF.set_index(['group','observation'])
+plantGrowthStackedDF = plantGrowthRawDF.set_index(['group', 'observation'])
 plantGrowthStackedDF
 
 # Here, we see that the row index consists of a MultiIndex on the group and
@@ -953,6 +977,6 @@ pd.melt(USIndexDataDF[:2], id_vars=['TradingDate'], var_name='Index Name', value
 # This function is used to convert a categorical variable into an indicator DataFrame,
 # which is essentially a truth table of possible values of the categorical variable. An
 # example of this is the following command:
-melted=pd.melt(USIndexDataDF[:2], id_vars=['TradingDate'], var_name='Index Name', value_name='Index Value')
+melted = pd.melt(USIndexDataDF[:2], id_vars=['TradingDate'], var_name='Index Name', value_name='Index Value')
 melted
 pd.get_dummies(melted['Index Name'])

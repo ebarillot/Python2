@@ -18,8 +18,6 @@ regions = pd.read_csv('TP/reg1999.txt', sep='\t', encoding='iso-8859-15')
 regions
 regions.columns.values
 regions.index
-regions.reset_index()
-regions.reset_index().reset_index()
 regions.loc[:, ['REGION', 'NCCENR']]
 regions['REGION'].unique()
 regions['REGION'].unique()
@@ -27,7 +25,19 @@ regions.loc['REGION'=='1']
 regions.reindex(index=['REGION'])
 pd.DataFrame(regions,index=regions['REGION'].unique())
 
+regions = regions.set_index(['REGION'])
+# regions.reset_index()
+# regions.reset_index().reset_index()
+regions.index
+regions.loc[1]['NCCENR']
+regions_noms = regions['NCCENR']
+regions_noms[1]
+regions_noms[2]
+type(regions_noms)  # => Series
+regions_noms.index
 
+#
+#
 dataset = pd.read_excel('TP/MDB-INSEE-V2.xls', sheet_name='Table Décisionnelle INSEE')
 df_raw = pd.DataFrame(dataset)
 df_raw.columns.values
@@ -107,7 +117,11 @@ df1['Nb praticiens'] = df1['Nb Omnipraticiens BV'] \
                        + df1['Nb Infirmiers Libéraux BV'] \
                        + df1['Nb dentistes Libéraux BV'] \
                        + df1['Nb pharmaciens Libéraux BV']
-df1['Region'] = regions[df1['REG']]
+type(df1['REG'])
+type(regions_noms)
+regions_noms[df1['REG']]
+#  ==> faire une serie à partir d'une autre
+df1['Region'] = regions_noms[df1['REG']]
 df1[['Nb Atifs', 'Population', 'Nb praticiens', 'Nb propriétaire']].corr(method='pearson')
 
 

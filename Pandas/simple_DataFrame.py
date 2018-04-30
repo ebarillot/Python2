@@ -5,10 +5,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = pd.DataFrame({'A': [ 1  , 2  , 3  , 3  , 4  , 4  , 3  ],
-                   'B': ['a' ,'b' ,'c' ,'a' ,'b' ,'c' , 'a'],
-                   'C': ['0' ,'1' ,'1' ,'0' ,'0' ,'0' , '1'],
-                   'D': ['d1','d2','d3','d4','d5','d6','d6']})
+df = pd.DataFrame({'A': [1, 2, 3, 3, 4, 4, 3],
+                   'B': ['a', 'b', 'c', 'a', 'b', 'c', 'a'],
+                   'C': ['0', '1', '1', '0', '0', '0', '1'],
+                   'D': ['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd6']})
 df.size
 df.count()
 df.index
@@ -40,7 +40,7 @@ len(df.loc[df_filters['A3'], ['B', 'C']])
 
 def freq_nvars(dframe, varlist):
     """
-    :param dframe: DateFrame
+    :param dframe: DataFrame
     :param varlist: liste des variables jointes
     :return: retourne un tableau 2D de fréquences jointes sur les variables var1 et var2
     """
@@ -57,13 +57,11 @@ def freq_nvars_filters(dframe, filters, varlist):
     un tableau par filtre
     les clés du dictionnaire sont celles du dictionnaire de filtres
     """
-    return dict( [ (filter_name, freq_nvars(dframe.loc[filter_values], varlist))
-                    for filter_name, filter_values in filters.iteritems() ] )
-
+    return dict([(filter_name, freq_nvars(dframe.loc[filter_values], varlist))
+                 for filter_name, filter_values in filters.iteritems()])
 
 
 df_freq = freq_nvars_filters(df, df_filters, ['B', 'C'])
-
 
 # controle de la somme des fréquences
 for idx in df_freq.keys():

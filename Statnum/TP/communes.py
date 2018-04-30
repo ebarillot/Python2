@@ -18,12 +18,12 @@ regions = pd.read_csv('TP/reg1999.txt', sep='\t', encoding='iso-8859-15')
 regions
 regions.columns.values
 regions.index
-regions.loc[:, ['REGION', 'NCCENR']]
-regions['REGION'].unique()
-regions['REGION'].unique()
-regions.loc['REGION'=='1']
-regions.reindex(index=['REGION'])
-pd.DataFrame(regions,index=regions['REGION'].unique())
+regions.loc[:, [b'REGION', b'NCCENR']]
+regions[b'REGION'].unique()
+regions.loc[[b'REGION' == '1']]
+regions[b'REGION' == '1']
+regions.reindex(index=[b'REGION'])
+pd.DataFrame(regions, index=regions[b'REGION'].unique())
 
 regions = regions.set_index(['REGION'])
 # regions.reset_index()
@@ -124,7 +124,6 @@ regions_noms[df1['REG']]
 df1['Region'] = regions_noms[df1['REG']]
 df1[['Nb Atifs', 'Population', 'Nb praticiens', 'Nb propriétaire']].corr(method='pearson')
 
-
 df1['Nb praticiens'].mean()
 df1['Nb praticiens'].quantile(0.25)
 df1['Nb praticiens'].quantile(0.50)
@@ -147,8 +146,7 @@ plt.title("Nb praticiens par région")
 plt.suptitle("")
 plt.ylabel("Nb praticiens")
 plt.xlabel("Région")
-plt.ylim(0,200)
-
+plt.ylim(0, 200)
 
 df1.loc[:, ['Population', 'Nb praticiens']].boxplot()
 df1.loc[:, ['Nb Omnipraticiens BV', 'Nb Infirmiers Libéraux BV', 'Nb dentistes Libéraux BV',

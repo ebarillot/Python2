@@ -15,22 +15,16 @@ if os.path.basename(os.getcwd()) != 'Statnum':
 # dataset = pd.read_excel('TP/MDB-INSEE-V2.xlsx', sheet_name='Feuil1')
 # dataset = pd.read_excel('TP/MDB-INSEE-V2.xlsx', sheet_name='Table Décisionnelle INSEE')
 regions = pd.read_csv('TP/reg1999.txt', sep='\t', encoding='iso-8859-15')
+regions[regions[b'REGION'] == 1]
+regions.set_index('REGION', inplace=True)
 regions
+regions.loc[1]
 regions.columns.values
 regions.index
-regions.loc[:, [b'REGION', b'NCCENR']]
-regions[b'REGION'].unique()
-regions.loc[[b'REGION' == '1']]
-regions[b'REGION' == '1']
-regions.reindex(index=[b'REGION'])
-pd.DataFrame(regions, index=regions[b'REGION'].unique())
-
-regions = regions.set_index(['REGION'])
-# regions.reset_index()
-# regions.reset_index().reset_index()
-regions.index
+regions.loc[:, ['NCCENR']]
 regions.loc[1]['NCCENR']
 regions_noms = regions['NCCENR']
+regions_noms.index
 regions_noms[1]
 regions_noms[2]
 type(regions_noms)  # => Series
@@ -40,7 +34,10 @@ regions_noms.index
 #
 dataset = pd.read_excel('TP/MDB-INSEE-V2.xls', sheet_name='Table Décisionnelle INSEE')
 df_raw = pd.DataFrame(dataset)
+df_raw.set_index(['CODGEO'], inplace=True)
+df_raw.index
 df_raw.columns.values
+df_raw.info()
 df_raw['Urbanité Ruralité'].dtype
 # df['Urbanité Ruralité'].astype(unicode)
 
@@ -56,6 +53,49 @@ df_raw.head(5)
 df_raw.columns.values
 df_raw.dtypes
 print(df_raw.dtypes)
+
+# communes par population
+# comm_pop = np.log(df_raw[df_raw['Population']>0][['Population']])
+comm_pop = df_raw[df_raw['Population'] > 0]['Population']
+comm_pop2 = map(lambda x: int(x), ((np.floor(comm_pop / 1000)) * 1000))
+pop_freq = pd.Series(sorted(comm_pop2)).value_counts()
+fig = 1
+plt.figure(fig)
+pop_freq[2:].plot()
+plt.show()
+plt.close(fig)
+
+cuts = pd.cut(df_raw['Population'],
+              range(0, 10000, 1000)
+              + range(10000, 100000, 10000)
+              + range(100000, 1000000, 100000)
+              + range(1000000, 5000000, 1000000))
+cuts.value_counts()[5:].plot(kind='bar')
+plt.show()
+
+pd.DataFrame(df_raw['Population']).boxplot()
+plt.show()
+
+#
+#
+comm_pop_pct = df_raw['Evolution Pop %']
+pop_pct_freq = pd.Series(sorted(comm_pop_pct)).value_counts()
+fig = 2
+plt.figure(fig)
+pop_pct_freq.hist()
+plt.show()
+plt.close(fig)
+
+type(comm_pop)
+np.array(comm_pop)
+fig = 1
+plt.figure(fig)
+comm_pop.plot()
+plt.hist(np.array(comm_pop), normed=True, bins=20)
+plt.title("Histogramme population des communes")
+plt.xlabel("Population")
+plt.legend(["population"])
+plt.show()
 
 df1 = pd.DataFrame(df_raw, columns=['CODGEO',
                                     'LIBGEO',
@@ -171,51 +211,112 @@ plt.close()
 # TODO: - nb de communes rurales par dep
 # TODO: - cumul pop des communes rurales par dep
 # TODO: - % de la pop rurales par dep
-df1_dep = df1.groupby(['DEP']).aggregate(np.sum)
-df1_dep.drop('Evolution Pop %', axis=1, inplace=True)
-df1_dep.shape
-df1_dep.info()
-df1_dep.dtypes
+#  Colonne BV : bassin de vie; voir association comunne -> BV
+# dans fichier de référence INSEE 2012
+df_raw_dep_1 = pd.DataFrame(df_raw, columns=[
+    'DEP',
+    'Nb Pharmacies et parfumerie',
+    'Dynamique Entrepreneuriale',
+    'Dynamique Entrepreneuriale Service et Commerce',
+    'Population',
+    'Evolution Population',
+    'Nb Ménages',
+    'Nb Résidences Principales',
+    'Nb propriétaire',
+    'Nb Logement',
+    'Nb Résidences Secondaires',
+    'Nb Log Vacants',
+    'Nb Occupants Résidence Principale',
+    'Nb Femme',
+    'Nb Homme',
+    'Nb Mineurs',
+    'Nb Majeurs',
+    'Nb Etudiants',
+    'Nb Atifs',
+    'Nb Actifs Salariés',
+    'Nb Actifs Non Salariés',
+    'Nb Logement Secondaire et Occasionnel',
+    'Nb Hotel',
+    'Capacité Hotel',
+    'Nb Camping',
+    'Capacité Camping'
+    'Nb Entreprises Secteur Services',
+    'Nb Entreprises Secteur Commerce',
+    'Nb Entreprises Secteur Construction',
+    'Nb Entreprises Secteur Industrie',
+    'Nb Création Enteprises',
+    'Nb Création Industrielles',
+    'Nb Création Construction',
+    'Nb Création Commerces',
+    'Nb Création Services',
+    'Nb Education, santé, action sociale',
+    'Nb Services personnels et domestiques',
+    'Nb Santé, action sociale',
+])
+df_raw_dep_2 = pd.DataFrame(df_raw, columns=[
+    'DEP',
+    'REG',
+    'Moyenne Revenus Fiscaux Départementaux',
+    'Dep Moyenne Salaires Horaires',
+    'Dep Moyenne Salaires Cadre Horaires',
+    'Dep Moyenne Salaires Prof Intermédiaire Horaires',
+    'Dep Moyenne Salaires Employé Horaires',
+    'Dep Moyenne Salaires Ouvrié Horaires'
+])
+df_dep_2 = df_raw_dep_2.groupby(['DEP']).aggregate(np.min)
+
+
+df_dep_1 = df_raw_dep_1.groupby(['DEP']).aggregate(np.sum)
+type(df_dep_1)
+df_dep_1.index
+df_dep_1.columns.values
+df_dep_1.describe()
+df_raw_dep_2.columns.values
+
+df_dep = pd.concat([df_dep_1, df_dep_2], axis=1)
+
 plt.figure()
-pd.DataFrame(df1_dep['Nb praticiens']).boxplot()
+pd.DataFrame(df_dep['Nb Résidences Principales']).boxplot()
 plt.show()
 plt.close()
 
 plt.figure()
-plt.scatter(df1_dep['Population'], df1_dep['Nb praticiens'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.scatter(df_dep['Population'], df_dep['Nb Education, santé, action sociale'], marker='o', s=50, facecolors='none', edgecolors='r')
 plt.show()
 plt.close()
 
-#
-#
-df2 = pd.DataFrame(df_raw, columns=['CODGEO',
-                                    'Orientation Economique',
-                                    'Urbanité Ruralité',
-                                    'LIBGEO',
-                                    'REG',
-                                    'DEP'
-                                    'Nb Omnipraticiens BV',
-                                    'Nb Infirmiers Libéraux BV',
-                                    'Nb dentistes Libéraux BV',
-                                    'Nb pharmaciens Libéraux BV',
-                                    'Population'
-                                    ])
-df2.head(5)
-df2.describe()
-df1.info(verbose=True)
-df2['Urbanité Ruralité']
+plt.figure()
+plt.scatter(df_dep['Nb Résidences Principales'], df_dep['Nb Résidences Secondaires'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
 
-df3 = pd.DataFrame(df_raw, columns=['CODGEO',
-                                    'Orientation Economique',
-                                    'Urbanité Ruralité',
-                                    'LIBGEO',
-                                    'REG',
-                                    'DEP'])
-df3['Nb praticiens'] = df_raw['Nb Omnipraticiens BV'] \
-                       + df_raw['Nb Infirmiers Libéraux BV'] \
-                       + df_raw['Nb dentistes Libéraux BV'] \
-                       + df_raw['Nb pharmaciens Libéraux BV']
-df3['Population'] = df_raw['Population']
-df3['Nb Atifs'] = df_raw['Nb Atifs']
-df3[['Nb praticiens', 'Population']].corr(method='pearson')
-df3[['Nb Atifs', 'Population', 'Nb praticiens']].corr(method='pearson')
+plt.figure()
+plt.scatter(df_dep['Nb Création Industrielles'], df_dep['Nb Création Commerces'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+
+plt.figure()
+plt.scatter(df_dep['Nb Création Industrielles'], df_dep['Nb Création Services'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+
+plt.figure()
+plt.scatter(df_dep['Moyenne Revenus Fiscaux Départementaux'], df_dep['Dep Moyenne Salaires Horaires'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+
+plt.figure()
+plt.scatter(df_dep['Moyenne Revenus Fiscaux Départementaux'], df_dep['Dep Moyenne Salaires Cadre Horaires'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+
+plt.figure()
+plt.scatter(df_dep['Moyenne Revenus Fiscaux Départementaux'], df_dep['Dep Moyenne Salaires Prof Intermédiaire Horaires'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+
+plt.figure()
+plt.scatter(df_dep['Moyenne Revenus Fiscaux Départementaux'], df_dep['Dep Moyenne Salaires Ouvrié Horaires'], marker='o', s=50, facecolors='none', edgecolors='r')
+plt.show()
+plt.close()
+

@@ -209,37 +209,16 @@ df_dep_cr.dropna().shape
 for col in df_dep.columns.values:
     print('{}: {}'.format(col, df_dep_cr[col].dropna().shape))
 
-# PCA sur données non reduites, non centrées
-pca_dep = PCA()
-# pca = PCA(n_components=2)
-df_dep_transf = pca_dep.fit_transform(df_dep)  # pas nécessaire de centrer les colonnes ; renvoie les comp. princ.
-df_dep_transf
-
-print("Shape of reduced dataset: {}".format(str(df_dep_transf.shape)))
-
-plt.figure()
-plt.plot(df_dep_transf[:, 0], df_dep_transf[:, 1], 'o', markersize=7, color='blue')
-plt.xlabel('1er axe principal')
-plt.ylabel('2e axe principal')
-plt.legend()
-plt.title('ACP avec 2 composantes principales')
-plt.show()
-
-inerties = pca_dep.explained_variance_  # inertie expliquée par chaque composante principale
-print("Inertie d'une, deux, trois composantes principales : {}".format(np.cumsum(inerties)))
-print('valeurs singulieres : {}'.format(np.sqrt(inerties * df_dep_transf.shape[0])))
-
 # PCA sur données reduites centrées
 pca_dep_cr = PCA()
 # pca = PCA(n_components=2)
-df_dep_cr_transf = pca_dep_cr.fit_transform(
-    df_dep_cr)  # pas nécessaire de centrer les colonnes ; renvoie les comp. princ.
+df_dep_cr_transf = pca_dep_cr.fit_transform(df_dep_cr.dropna())
 df_dep_cr_transf
 
 print("Shape of reduced dataset: {}".format(str(df_dep_cr_transf.shape)))
 
 plt.figure()
-plt.plot(df_dep_cr_transf[:, 0], df_dep_cr_transf[:, 1], 'o', markersize=7, color='blue')
+plt.plot(df_dep_cr_transf[:, 0], df_dep_cr_transf[:, 1], 'o', markersize=3, color='blue')
 plt.xlabel('1er axe principal')
 plt.ylabel('2e axe principal')
 plt.legend()
@@ -250,6 +229,20 @@ inerties_cr = pca_dep_cr.explained_variance_  # inertie expliquée par chaque co
 print("Inertie d'une, deux, trois composantes principales : {}".format(np.cumsum(inerties_cr)))
 print('valeurs singulieres : {}'.format(np.sqrt(inerties_cr * df_dep_cr_transf.shape[0])))
 
+# boxplot sur données salaires ni reduites ni centrées
+fig, axs = plt.subplots(nrows=1, ncols=5, figsize=(10, 4))
+iboxp = 0
+for col in ['Moyenne Revenus Fiscaux Départementaux',
+            'Dep Moyenne Salaires Prof Intermédiaire Horaires',
+            'Dep Moyenne Salaires Employé Horaires',
+            'Dep Moyenne Salaires Employé Horaires',
+            'Dep Moyenne Salaires Ouvrié Horaires']:
+    axs[iboxp].boxplot(df_dep_salr[col])
+    axs[iboxp].set_xticklabels(np.repeat(col, 2), rotation=0, fontsize=6)
+    iboxp += 1
+plt.tight_layout()
+
+
 # PCA sur données salaires reduites centrées
 pca_salr_cr = PCA()
 # pca = PCA(n_components=2)
@@ -259,12 +252,13 @@ df_dep_salr_cr_transf
 print("Shape of reduced dataset: {}".format(str(df_dep_salr_cr_transf.shape)))
 
 plt.figure()
-plt.plot(df_dep_salr_cr_transf[:, 0], df_dep_salr_cr_transf[:, 1], 'o', markersize=7, color='blue')
+plt.plot(df_dep_salr_cr_transf[:, 0], df_dep_salr_cr_transf[:, 1], 'o', markersize=3, color='blue')
 plt.xlabel('1er axe principal')
 plt.ylabel('2e axe principal')
 plt.legend()
 plt.title('ACP avec 2 composantes principales')
 plt.show()
+plt.savefig('TP/df_dep_salr_cr_transf.eps', format='eps')
 
 inerties_salr_cr = pca_salr_cr.explained_variance_  # inertie expliquée par chaque composante principale
 print("Inertie d'une, deux, trois composantes principales : {}".format(np.cumsum(inerties_salr_cr)))
@@ -287,7 +281,7 @@ df_dep_salr_transf
 print("Shape of reduced dataset: {}".format(str(df_dep_salr_transf.shape)))
 
 plt.figure()
-plt.plot(df_dep_salr_transf[:, 0], df_dep_salr_transf[:, 1], 'o', markersize=7, color='blue')
+plt.plot(df_dep_salr_transf[:, 0], df_dep_salr_transf[:, 1], 'o', markersize=3, color='blue')
 plt.xlabel('1er axe principal')
 plt.ylabel('2e axe principal')
 plt.legend()

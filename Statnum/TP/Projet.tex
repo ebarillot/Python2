@@ -1,0 +1,99 @@
+\documentclass[a4paper,11pt]{article}
+% spécification encodage indispensable
+\usepackage[utf8]{inputenc}
+% nécessaire pour éviter un warnong sur l'usage du french et de OT1; pas compris pourquoi fondamentalement
+\usepackage[T1]{fontenc}
+% pour les partilularités du français, par exemple les guillements
+\usepackage[french]{babel}
+% nécessaire pour la commande \mathbb{R} pour l'ensemble R
+\usepackage{amsfonts}
+
+% pour régler les marges
+\usepackage{geometry}
+\geometry{hmargin=3cm,vmargin=2cm}
+
+% pour les énumérations
+\usepackage{enumerate}
+
+% pour avoir le 1 de la fonction caractéristique affichée comme R
+% avec un double barre
+\usepackage{bbm}
+
+% pour les lettres majuscules rondes
+\usepackage{mathrsfs}
+
+% pour les URLs
+\usepackage{hyperref}
+
+% voir aide Latex ici : https://fr.sharelatex.com/
+
+
+%\usepackage[scr]{rsfso}
+%\usepackage{lmodern}
+%\usepackage{amsthm}
+%\usepackage{amssymb}
+\usepackage{amsmath}
+%\usepackage{latexsym}
+%\usepackage{eepic}
+%\usepackage{epsfig}
+%\usepackage{graphicx}
+%\usepackage{amscd}
+%\usepackage{mathtools}
+%\usepackage{csquotes}
+%%\usepackage[margin=3cm]{geometry}
+%\usepackage[text={16cm,22.9cm,centering}]{geometry}
+%\usepackage{upgreek}
+%\usepackage{enumitem}
+
+
+\title{Licence de Mathématiques \\3M248 - Projet}
+
+
+\author{Emmanuel Barillot - 3370161}
+
+% pour supprimer l'indentation de la 1ere ligne ce chaque paragraphe
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\maketitle
+
+
+
+\section{Introduction}
+Notre jeu de données provient des bases de données de l'INSEE. Il se compose d'un fichier Excel qui contient des informations sur les 36000 (environ) communes françaises.
+Il a été publié le 12 décembre 2014 à l'adresse: 
+\href{https://www.data.gouv.fr/s/resources/data-insee-sur-les-communes/20141212-105948/MDB-INSEE-V2.xls}{https://www.data.gouv.fr/s/resources/data-insee-sur-les-communes/20141212-105948/MDB-INSEE-V2.xls}
+
+Nous nous proposons d'analyser ces données de façon à chercher des liens entre les caractéristiques démographiques et les caractéristiques économiques des départements français.
+
+\section{Présentation des données}
+Le fichier brut contient plus de 36000 lignes et 100 colonnes.
+Certaines variables ne nous sont pas utiles comme le code de la région.
+Chaque ligne est identifiée par le code postal de la commune.
+Il y a des variables qualitatives que nous jugeons peu exploitables, comme l'aspect rural ou urbain d'une commune (deux valeurs disponibles).
+Certaines variables quantitatives sont relatives au bassin de vie, dont la définition n'est pas donnée dans ce jeu de données.
+Certaines variables semblent redondantes, nous n'avons gardé que celle qui nous semblait la plus pertinente, sans plus d'explications de la part de l'INSEE.
+Chaque ligne contient le code du département auquel elle appartient.
+Nous allons concentrer notre étude sur les 100 département présents dans le fichier, en procédant par agrégation des variables quantitatives.
+
+
+Nous procédons d'abord à une transformation simple des données brutes:
+\begin{itemize}
+\item suppression des variables non retenues
+\item agrégation des données par département
+\item séparation des variables en deux familles: caractéristiques démographiques et caractéristiques économiques.
+\end{itemize}
+
+Nous obtenons finalement les deux jeux de données suivants:
+
+
+\subsection{Exploration}
+\subsection{Analyse multivariée}
+\subsection{Classification}
+
+\section{Conclusion}
+
+
+
+\end{document}
+

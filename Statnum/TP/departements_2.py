@@ -202,6 +202,7 @@ def pca_figs(df, savefig=None, fmt='eps'):
     # projection des individus: revoir
     # proj_indiv = centreduce_df(df).as_matrix().dot(pca.components_[:, 0:2])
     # plt.scatter(proj_indiv[:, 0], proj_indiv[:, 1], marker='o', s=5, facecolors='none', edgecolors='b')
+    plt.scatter(pca_transf[:, 0], pca_transf[:, 1], marker='o', s=5, facecolors='none', edgecolors='b')
     plt.show()
     if savefig:
         typ_fig = 'Corr'
@@ -592,7 +593,7 @@ pca_pop['pca_infos'], \
 pca_pop['ebouli'], \
 pca_pop['pca_transf'], \
 pca_pop['pca'] = \
-    pca_figs(df_dep_pop, savefig=os.path.join(path_data, 'population'))
+    pca_figs(df_dep_pop, savefig=os.path.join(path_data, 'pop'))
 
 
 

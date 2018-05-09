@@ -1,0 +1,239 @@
+\documentclass{beamer}
+% spécification encodage indispensable
+\usepackage[utf8]{inputenc}
+% nécessaire pour éviter un warnong sur l'usage du french et de OT1; pas compris pourquoi fondamentalement
+\usepackage[T1]{fontenc}
+% pour les partilularités du français, par exemple les guillements
+\usepackage[french]{babel}
+% nécessaire pour la commande \mathbb{R} pour l'ensemble R
+\usepackage{amsfonts}
+
+
+\usetheme{Warsaw}
+\title{Licence de Mathématiques \\3M248 - Projet}
+\author{Emmanuel Barillot - 3370161}
+\date{09 mai 2018}
+
+\begin{document}
+\begin{frame}
+\titlepage
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Origine des données}
+	\begin{itemize}
+		\item Fichier de données INSEE de 2014 sur les 36000 communes françaises
+		\item traitement des données brutes
+		\begin{itemize}
+			\item suppression des variables non retenues
+			\item agrégation des données par département
+			\item séparation des variables en plusieurs familles
+			\begin{itemize}
+				\item salaires
+				\item démographie
+				\item économie
+			\end{itemize}
+		\end{itemize}
+
+		\item Idée: brosser un portrait des départements en fonction des trois aspects
+		\item Après essais, une variable a semblé intéressante: la ruralité
+			\begin{itemize}
+				\item[$\rightarrow$] calculée à partir du nb de communes de moins de $10000$ hab dans chaque département
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Variables}
+	\begin{itemize}
+	\item variables relatives aux salaires: 
+		\begin{itemize}
+		\item Moyenne Revenus Fiscaux Départementaux,
+	    \item Moyenne Salaires Cadre Horaires,
+	    \item Moyenne Salaires Prof Intermédiaire Horaires,
+	    \item Moyenne Salaires Employé Horaires,
+	    \item Moyenne Salaires Ouvrier Horaires,
+		\end{itemize}
+	\item variables relatives à la population d'entreprises et d'organismes:
+		\begin{itemize}
+		\item Nb Education, santé, action sociale,
+		\item Nb Entreprises,
+		\item Nb Création Entreprises,
+		\end{itemize}
+	\item variables relatives à la population:
+		\begin{itemize}
+		\item Population,
+		\item Evolution Population,
+		\item Nb Ménages,
+		\item Nb propriétaire,
+		\item Nb Etudiants.
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Boxplot}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_boxplots.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Scatter}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_grid_scatter.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Scatter 3D}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_1_scatter3D.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{ACP}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_2CP.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Cerle des corrélations}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_Corr.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Variance}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_Var.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Classification: K-means}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_Kmeans.eps}
+	\end{center}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{Démographie}
+	\framesubtitle{Regroupement hiérarchique ascendant}
+	\begin{center}
+	\includegraphics[scale=0.4]{pop_rha_tree.eps}
+	\end{center}
+\end{frame}
+
+
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Regroupement hiérarchique ascendant}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_rha_bar.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Boxplot}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_boxplots.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Scatter}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_grid_scatter.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Scatter 3D}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_1_scatter3D.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{ACP}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_2CP.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Cerle des corrélations}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_Corr.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Variance}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_Var.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Classification: K-means}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_Kmeans.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Regroupement hiérarchique ascendant}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_rha_tree.eps}
+%	\end{center}
+%\end{frame}
+%
+%
+%\begin{frame}
+%	\frametitle{Entreprises}
+%	\framesubtitle{Regroupement hiérarchique ascendant}
+%	\begin{center}
+%	\includegraphics[scale=0.4]{entrep_rha_bar.eps}
+%	\end{center}
+%\end{frame}
+
+\end{document}
+

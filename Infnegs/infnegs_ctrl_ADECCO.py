@@ -347,13 +347,15 @@ if __name__ == "__main__":
     log_init(level=logging.INFO)
     log_write(">>>>>>>>>>>>>>>>>>>> Controle fichiers ADECCO <<<<<<<<<<<<<<<<<<<<")
     # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-01"
-    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-03"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-04"
     path_src = os.path.join(path_root, 'originaux')
     path_dest = os.path.join(path_root, 'corriges')
     # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
     # PATTERN_INGNEGS_ADECCO = br"ADECCO_concat*.csv"
     # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_02_02.csv"
-    PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_*.csv"
+    # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_*.csv"
+    # PATTERN_FILENAME_INGNEGS_ADECCO = br"IMPAYE DU 19 03 2018.csv"
+    PATTERN_FILENAME_INGNEGS_ADECCO = br"*.csv"
 
     # read_data_file(p_path_src=path_src, file_name_re=PATTERN_INGNEGS_ADECCO)
     result = process_data_file(p_path_src=path_src,

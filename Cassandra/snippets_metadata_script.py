@@ -24,7 +24,6 @@ ks_dict = cluster.metadata.keyspaces
 ks_dict
 
 
-
 # colonnes d'une table particulière du ks system
 ks_dict['system'].tables  # => toutes les tables
 ks_dict['system'].tables['paxos'].columns
@@ -56,7 +55,24 @@ for k in ks_dict['system_schema'].tables['columns'].columns:
 
 # colonnes d'une table particulière d'un ks applicatif
 ks_dict['ks_view_search'].tables  # => dict dont les 2 clés sont: solr_entreprise, solr_entreprise_darwin
+ks_dict['ks_view_search'].tables['solr_entreprise'].name
 ks_dict['ks_view_search'].tables['solr_entreprise'].columns
+ks_dict['ks_view_search'].tables['solr_entreprise'].columns.keys()
+type(ks_dict['ks_view_search'].tables['solr_entreprise'].primary_key)
+for num, pk in enumerate(ks_dict['ks_view_search'].tables['solr_entreprise'].primary_key):
+    print(num, pk.name)
+for num, park in enumerate(ks_dict['ks_view_search'].tables['solr_entreprise'].partition_key):
+    print(num, park.name)
+for num, ck in enumerate(ks_dict['ks_view_search'].tables['solr_entreprise'].clustering_key):
+    print(num, ck.name)
+ks_dict['ks_view_search'].tables['solr_entreprise'].indexes.keys()
+for num, idx in enumerate(ks_dict['ks_view_search'].tables['solr_entreprise'].indexes.keys()):
+    print(num,
+          ks_dict['ks_view_search'].tables['solr_entreprise'].indexes[idx].name,
+          ks_dict['ks_view_search'].tables['solr_entreprise'].indexes[idx].kind,
+          ks_dict['ks_view_search'].tables['solr_entreprise'].indexes[idx].index_options)
+ks_dict['ks_view_search'].tables['solr_entreprise'].primary_key[0].name
+ks_dict['ks_view_search'].tables['solr_entreprise'].primary_key[1].name
 ks_dict['ks_view_search'].tables['solr_entreprise'].columns['entnum'].cql_type
 ks_dict['ks_view_search'].tables['solr_entreprise'].columns['entnum'].is_static
 ks_dict['ks_view_search'].tables['solr_entreprise'].columns['entnum'].is_reversed
@@ -70,3 +86,5 @@ ks_dict['ks_view_search'].tables['solr_entreprise'].export_as_string()
 ks_dict['ks_view_search'].tables['solr_entreprise_darwin'].export_as_string()
 
 cluster.shutdown()
+
+

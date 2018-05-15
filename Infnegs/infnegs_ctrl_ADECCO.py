@@ -94,7 +94,7 @@ remet_params = \
                         KEY_DATEFF:
                             {
                                 KEY_COL_NAME   : 'Echéance',
-                                KEY_COL_NAME_RE: ' *[Ee]ch[eé]ance *$',
+                                KEY_COL_NAME_RE: ' *[Ee]ch.ance *$',
                                 KEY_COL_LTR    : 'N',  # colonne N
                                 KEY_COL_POS    : EXCEL_COL_NO['N'],
                                 KEY_COL_RE     : r'^[0-9]{2}/[0-9]{2}/2[0-9]{3}'
@@ -264,8 +264,9 @@ def get_files(p_path_src, file_name_re):
 def get_file_lines(file_name, encoding_src):
     # type: (unicode, unicode) -> List
     flines = []
-    with open(file_name, 'r') as f:
-        for linef in f:
+    with open(file_name, 'rU') as f:     # le mode 'U' gère tous les types de fin de ligne
+        for cnt, linef in enumerate(f):
+            # print("Line {}: {}".format(cnt, linef.rstrip().decode(encoding_src)))
             flines.append(linef.rstrip().decode(encoding_src))
             # yield linef.rstrip().decode(encoding_src)
     return flines
@@ -342,12 +343,37 @@ def result_output_2(p_result, p_path_dest, remets_param, remet_name):
                     print('{}'.format(line[KEY_LINE]), file=fgood)
 
 
+def result_display_counts(p_result):
+    """
+    Affichage de compteurs de bons et de rejets, par fichier
+    """
+    for file_name in p_result:
+        # headers = p_result[file_name][0]
+        nb_good = 0
+        nb_bad = 0
+        nb_what_is_bad = dict()
+        for line in p_result[file_name][1:]:
+            if line[KEY_IS_BAD]:
+                nb_bad += 1
+                try:
+                    nb_what_is_bad[','.join(line[KEY_WHAT_IS_BAD])] += 1
+                except KeyError:
+                    nb_what_is_bad[','.join(line[KEY_WHAT_IS_BAD])] = 1
+
+            else:
+                nb_good += 1
+
+        print('\'{}\', {} = {}\t{} = {}'.format(file_name, 'goods', nb_good, 'bads', nb_bad))
+        for what_is_bad in nb_what_is_bad:
+            print('\t\'{}\' = {}'.format(what_is_bad, nb_what_is_bad[what_is_bad]))
+
+
 if __name__ == "__main__":
     # log_init(level=logging.DEBUG)
     log_init(level=logging.INFO)
     log_write(">>>>>>>>>>>>>>>>>>>> Controle fichiers ADECCO <<<<<<<<<<<<<<<<<<<<")
     # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-01"
-    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-04"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-05"
     path_src = os.path.join(path_root, 'originaux')
     path_dest = os.path.join(path_root, 'corriges')
     # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
@@ -355,6 +381,7 @@ if __name__ == "__main__":
     # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_02_02.csv"
     # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_*.csv"
     # PATTERN_FILENAME_INGNEGS_ADECCO = br"IMPAYE DU 19 03 2018.csv"
+    # PATTERN_FILENAME_INGNEGS_ADECCO = br"MAIL IMPAYE*.csv"
     PATTERN_FILENAME_INGNEGS_ADECCO = br"*.csv"
 
     # read_data_file(p_path_src=path_src, file_name_re=PATTERN_INGNEGS_ADECCO)
@@ -376,5 +403,10 @@ if __name__ == "__main__":
             for one_OD in list_of_OD:
                 log_write(INDENT + '{}'.format([field for field in one_OD.items()]))
                 print(INDENT + '{}'.format([field for field in one_OD.items() if field[1] is not None]), file=fout)
+
+    # compteurs des bons et rejets, par fichier
+    from time import sleep
+    sleep(0.5)
+    result_display_counts(result)
 
     log_exit()

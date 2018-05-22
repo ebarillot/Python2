@@ -1,5 +1,6 @@
 # coding=utf-8
-# from __future__ import print_function, unicode_literals
+
+from __future__ import print_function, unicode_literals
 
 import collections
 import itertools
@@ -51,9 +52,11 @@ class SimpleMapReduce(object):
           The portion of the input data to hand to each worker.  This
           can be used to tune performance during the mapping phase.
         """
-        # map_responses = self.pool.map(self.map_func, inputs, chunksize=chunksize)
-        # partitioned_data = self.partition(itertools.chain(*map_responses))
-        # reduced_values = self.pool.map(self.reduce_func, partitioned_data)
-        # return reduced_values
         map_responses = self.pool.map(self.map_func, inputs, chunksize=chunksize)
-        return map_responses
+        partitioned_data = self.partition(itertools.chain(*map_responses))
+        reduced_values = self.pool.map(self.reduce_func, partitioned_data)
+        return reduced_values
+
+        # pour ne tester que la phase de map
+        # map_responses = self.pool.map(self.map_func, inputs, chunksize=chunksize)
+        # return map_responses

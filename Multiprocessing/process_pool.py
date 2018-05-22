@@ -17,9 +17,15 @@ if __name__ == '__main__':
     inputs = list(range(10))
     print('Input   :', inputs)
 
+    """
+    Utilisation de la fonction map classique (builin)
+    """
     builtin_outputs = map(do_calculation, inputs)
     print('Built-in:', builtin_outputs)
 
+    """
+    Utilisation de la fonction map du module multiprocessing
+    """
     pool_size = multiprocessing.cpu_count() * 2
     pool = multiprocessing.Pool(processes=pool_size,
                                 initializer=start_process,

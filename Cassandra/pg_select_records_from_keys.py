@@ -175,7 +175,7 @@ if __name__ == "__main__":
     tm['read_keys_from_files'] = time.clock() - tm['read_keys_from_files']
 
     tm['get_some_records_from_keys'] = time.clock()
-    rows = get_some_records_from_keys(session, TABLE_NAME, tab_pk, cluster_name=CLUSTER_NAME, keys_list=keys_list[:50])
+    rows = get_some_records_from_keys(session, TABLE_NAME, tab_pk, cluster_name=CLUSTER_NAME, keys_list=keys_list[:200])
     print('Rows: {}'.format(len(rows)))
     print('10 first rows:')
     for num, row in enumerate(rows[:10]):   # les 10 premières seulement
@@ -185,8 +185,8 @@ if __name__ == "__main__":
     tm['get_some_records_from_keys_concurrent'] = time.clock()
     rows = get_some_records_from_keys_concurrent(session, TABLE_NAME, tab_pk,
                                                  cluster_name=CLUSTER_NAME,
-                                                 keys_list=keys_list[:2000],
-                                                 concurrency=100)   # semble optimal, mieux que 50 ou 200
+                                                 keys_list=keys_list[:10000],
+                                                 concurrency=50)   # 100 semble optimal, mieux que 50 ou 200
     print('Rows: {}'.format(len(rows)))
     print('10 first rows:')
     for num, row in enumerate(rows[:10]):   # les 10 premières seulement

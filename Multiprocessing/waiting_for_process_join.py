@@ -7,10 +7,12 @@ import multiprocessing
 import time
 import sys
 
+
 def daemon():
     print('Starting:', multiprocessing.current_process().name)
     time.sleep(2)
     print('Exiting :', multiprocessing.current_process().name)
+
 
 def non_daemon():
     print('Starting:', multiprocessing.current_process().name)
@@ -30,6 +32,7 @@ if __name__ == '__main__':
 
     d.join()
     n.join()
+
 
 '''
 Since the main process waits for the daemon to exit using join(), the “Exiting” message is printed this time.

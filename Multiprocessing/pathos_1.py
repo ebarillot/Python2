@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
 
 '''
-On est obligé d'importer les packages random, time et os dans la fonction à cause de l'implémentaion
+Sous windows, On est obligé d'importer les packages random, time et os dans la fonction à cause de l'implémentaion
 de pathos sous Windows, qui ne sait pas vraiment faire un fork.
 Voir explications:  https://stackoverflow.com/questions/33227545/pathos-multiprocessing-cant-call-any-package-and-function-in-the-class
 

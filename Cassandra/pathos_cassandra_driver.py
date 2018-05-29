@@ -1,7 +1,7 @@
 # coding=utf-8
 
 import itertools
-from pathos.multiprocessing import ProcessingPool as Pool
+from pathos.multiprocessing import ProcessPool as Pool
 import time
 
 from cassandra.cluster import Cluster
@@ -19,7 +19,8 @@ class QueryManager(object):
     concurrency = 100  # chosen to match the default in execute_concurrent_with_args
 
     def __init__(self, cluster, process_count=None):
-        self.pool = Pool(processes=process_count, initializer=self._setup, initargs=(cluster,))
+        self.pool = Pool(process_count)
+        # self.pool = Pool(processes=process_count, initializer=self._setup, initargs=(cluster,))
 
     @classmethod
     def _setup(cls, cluster):
@@ -33,10 +34,12 @@ class QueryManager(object):
 
     def get_results(self, params):
         params = list(params)
-        results = self.pool.map(_multiprocess_get, (params[n:n + self.concurrency] for n in xrange(0, len(params), self.concurrency)))
+        results = self.pool.map(self._results_from_concurrent,
+                                (params[n:n + self.concurrency]
+                                 for n in xrange(0, len(params), self.concurrency)))
         return list(itertools.chain(*results))
 
-    @classmethod
+    @staticmethod
     def _results_from_concurrent(cls, params):
         return [results[1] for results in execute_concurrent_with_args(cls.session, cls.prepared, params)]
 
@@ -44,8 +47,8 @@ class QueryManager(object):
 # cette fonction est extérieure à toute classe et attachée de fait au top level (racine) du module
 # de façon à être pickle-able: c'est une limite de pickle, qui ne sait pas sérialiser une méthode directement.
 # Par contre, dans cette fonction, on peut appeler une méthode d'une classe. Comment pickle s'en sort ? mystère ...
-def _multiprocess_get(params):
-    return QueryManager._results_from_concurrent(params)
+# def _multiprocess_get(params):
+#     return QueryManager._results_from_concurrent(params)
 
 
 if __name__ == '__main__':

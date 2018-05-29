@@ -22,7 +22,7 @@ Produit normalement ce message:
 (qui est dû qu fait que pickle ne sait pas sérialiser une méthode)
 
 Traceback (most recent call last):
-  File "C:/Users/emmanuel_barillot/Documents/Developpements/Python2/Multiprocessing/pickle_error.py", line 16, in <module>
+  File "C:/Users/emmanuel_barillot/Documents/Developpements/Python2/Multiprocessing/pickle_multiprocessing_error.py", line 16, in <module>
     pool.map(Tasks.process_some_task, range(10))
   File "C:\ProgramData\Anaconda2\lib\multiprocessing\pool.py", line 251, in map
     return self.map_async(func, iterable, chunksize).get()

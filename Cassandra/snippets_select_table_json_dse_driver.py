@@ -4,8 +4,9 @@ from __future__ import print_function, unicode_literals
 import os
 import codecs
 from itertools import izip
-from cassandra.cluster import Cluster
-from cassandra.query import dict_factory, named_tuple_factory, ordered_dict_factory
+
+from dse.cluster import Cluster
+from dse.query import dict_factory, named_tuple_factory, ordered_dict_factory
 from snippets_metadata_class import ClusterInfo
 
 
@@ -99,9 +100,15 @@ if __name__ == "__main__":
     print(TAG + 'Select des pk de quelques lignes, retour en ordered_dict, 2eme version d\'affichage')
     session.row_factory = ordered_dict_factory
     rows = get_some_keys(session, CLUSTER_NAME, TABLE_NAME, tab_pk)
-    for num, row in enumerate(rows):
-        row_p = ['{}: {}'.format(field_name, row[field_name]) for field_name in row]
-        print('{} {}'.format(num, ', '.join(row_p)))
+    for row in rows:
+        print('{}'.format(row))
+    '''
+    grosse tare du dse-driver: il ne tient pas compte du paramètre session.row_factory
+    il retourne tjrs un resultset qui est une liste de Row() qui est en fait un named_tuple
+    '''
+    # for num, row in enumerate(rows):
+    #     row_p = ['{}: {}'.format(field_name, row[field_name]) for field_name in row]
+    #     print('{} {}'.format(num, ', '.join(row_p)))
 
     # retour en named_tuple
     print(TAG + 'Select des pk de quelques lignes, retour en named_tuple')

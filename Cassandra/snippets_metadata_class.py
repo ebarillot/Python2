@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from cassandra.cluster import Cluster
+# from dse.cluster import Cluster
 
 
 class ClusterInfo(object):

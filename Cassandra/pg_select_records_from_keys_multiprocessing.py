@@ -56,7 +56,9 @@ class QueryManager(object):
         return [results[1] for results in execute_concurrent_with_args(cls.session, cls.prepared, params)]
 
 
-# TODO: pourquoi n'est pas une methode de classe ?
+# cette fonction est extérieure à toute classe et attachée de fait au top level (racine) du module
+# de façon à être pickle-able: c'est une limite de pickle, qui ne sait pas sérialiser une méthode directement.
+# Par contre, dans cette fonction, on peut appeler une méthode d'une classe. Comment pickle s'en sort ? mystère ...
 def _multiprocess_get(params):
     return QueryManager._results_from_concurrent(params)
 

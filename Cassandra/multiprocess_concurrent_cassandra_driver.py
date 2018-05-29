@@ -60,10 +60,15 @@ if __name__ == '__main__':
     iterations = 1000
     processes = 4
 
-    cluster = Cluster()
+    cluster = Cluster(['tstdar05'])
     qm = QueryManager(cluster, processes)
 
     start = time.time()
     rows = qm.get_results(query_gen(iterations))
     delta = time.time() - start
     print("%d queries in %s seconds (%s/s)" % (iterations, delta, iterations / delta))
+
+'''
+Erreur avec pickle:
+PicklingError("Can't pickle <class 'cassandra.io.libevreactor.SetType(VarcharType)'
+'''

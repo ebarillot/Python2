@@ -3,6 +3,8 @@
 from __future__ import print_function, unicode_literals
 
 '''
+Ne marche pas: NameError: global name '_process_some_task' is not defined
+
 On est obligé d'importer les packages random, time et os dans la fonction à cause de l'implémentaion
 de pathos sous Windows, qui ne sait pas vraiment faire un fork.
 Voir explications:  https://stackoverflow.com/questions/33227545/pathos-multiprocessing-cant-call-any-package-and-function-in-the-class

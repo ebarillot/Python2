@@ -113,7 +113,7 @@ def filter_files_with_patterns_and_extensions(filenames, extensions=None, includ
     filtered = filenames
     if extensions:
         filtered = filter(lambda x: x.endswith(tuple(map(lower, extensions))), map(lower, filtered))
-    if include_patterns and include_patterns != ('*',) and filtered:
+    if include_patterns and include_patterns[0] != '*' and filtered:
         filtered = [f for patt in include_patterns for f in filtered if fnmatch.fnmatch(f, patt)]
     if exclude_patterns and filtered:
         filtered = [f for patt in exclude_patterns for f in filtered if not fnmatch.fnmatch(f, patt)]

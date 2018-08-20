@@ -171,7 +171,7 @@ def process_data_file(p_path_src, file_name_re, remets_param, remet_name):
         # map(lambda x: log_write("{}: {}".format(file_name, x), level=logging.DEBUG), file_lines)
 
         file_process_result[file_name] = []
-        # TODO transformer en dict, de façon à éviter que list[0] soit particulière et contienne les haeders ?
+        # TODO transformer en dict, de façon à éviter que list[0] soit particulière et contienne les headers ?
         for (ind, line_str) in enumerate(file_lines):
             file_lines_processed = OrderedDict()
             ind += 1  # numerotation commence à 1
@@ -373,15 +373,12 @@ if __name__ == "__main__":
     log_init(level=logging.INFO)
     log_write(">>>>>>>>>>>>>>>>>>>> Controle fichiers ADECCO <<<<<<<<<<<<<<<<<<<<")
     # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-01"
-    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-06-01"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-08-20"
     path_src = os.path.join(path_root, 'originaux')
     path_dest = os.path.join(path_root, 'corriges')
     # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
     # PATTERN_INGNEGS_ADECCO = br"ADECCO_concat*.csv"
-    # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_02_02.csv"
-    # PATTERN_FILENAME_INGNEGS_ADECCO = br"ADECCO_2018_*.csv"
-    # PATTERN_FILENAME_INGNEGS_ADECCO = br"IMPAYE DU 19 03 2018.csv"
-    # PATTERN_FILENAME_INGNEGS_ADECCO = br"MAIL IMPAYE*.csv"
+    # PATTERN_FILENAME_INGNEGS_ADECCO = "Impayés du 20 juin 2018.csv"
     PATTERN_FILENAME_INGNEGS_ADECCO = br"*.csv"
 
     # read_data_file(p_path_src=path_src, file_name_re=PATTERN_INGNEGS_ADECCO)
@@ -396,13 +393,15 @@ if __name__ == "__main__":
     # sortie très importante pour bien comprendre la structure de result
     # et pour comprendre comment travailler avec
     INDENT = '    '
+    encoding_remet = get_encoding(remets_param=remet_params, remet_name='ADECCO')
     with open(os.path.join(path_dest, 'result.txt'), 'w') as fout:
         for file_name, list_of_OD in result.items():
             log_write('{}'.format(file_name))
-            print('{}'.format(file_name), file=fout)
+            print('{}'.format(file_name).encode(encoding_remet), file=fout)
             for one_OD in list_of_OD:
-                log_write(INDENT + '{}'.format([field for field in one_OD.items()]))
-                print(INDENT + '{}'.format([field for field in one_OD.items() if field[1] is not None]), file=fout)
+                log_write(INDENT + '{}'.format([field for field in one_OD.items()]).encode(encoding_remet))
+                print(INDENT + '{}'.format([field for field in one_OD.items() if field[1] is not None])
+                      .encode(encoding_remet), file=fout)
 
     # compteurs des bons et rejets, par fichier
     from time import sleep

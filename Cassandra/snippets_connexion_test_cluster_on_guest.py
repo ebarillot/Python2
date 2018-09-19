@@ -2,7 +2,12 @@
 
 from cassandra.cluster import Cluster
 
-cluster = Cluster(['192.168.56.33'])
+# cluster = Cluster(['192.168.56.33'])
+# cluster = Cluster(['192.168.56.34'])
+cluster = Cluster(['192.168.60.35'])
+# cluster = Cluster(['192.168.60.100'])
+# cluster = Cluster(['192.168.60.101'])
+# cluster = Cluster(['192.168.60.102'])
 
 session = cluster.connect()
 session.execute('USE system')

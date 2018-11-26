@@ -31,7 +31,7 @@ def get_some_records_from_keys(a_session, table_name, where_col_names, keys_list
     # print(col_names)
     # print(['{}=?'.format(col_name) for col_name in col_names])
     cqjson = ['json'] if get_json else ['']
-    query = ' '.join(['select *'] + cqjson
+    query = ' '.join(['select ent_histo_denomination'] + cqjson
                      + ['from', table_name]
                      + ['where'] + [' and '.join(['{}=?'.format(col_name) for col_name in where_col_names])])
     print('query: {}'.format(query))

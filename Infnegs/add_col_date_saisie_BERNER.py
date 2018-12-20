@@ -66,7 +66,8 @@ if __name__ == "__main__":
     path_src = path_root
     path_dest = path_root
     # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)
-    PATTERN_INGNEGS_ADECCO = br"ellixuim_201806.csv"
+    PATTERN_INGNEGS_ADECCO = br"ELLIXIUM_201812.csv"
+
 
     # read_data_file(p_path_src=path_src, file_name_re=PATTERN_INGNEGS_ADECCO)
     process_data_file(p_path_src=path_src,

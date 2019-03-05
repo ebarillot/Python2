@@ -73,7 +73,7 @@ def call_stack():
 
 
 def mngt_error(error):
-    # type: () -> None
+    # type: (Exception) -> None
     """
     Fonction qui gère le logging des erreurs
     Produit un résumé de la "stack call"
@@ -94,7 +94,7 @@ DEFAULT_LOG_LEVEL = logging.INFO
 
 
 def log_init(logger_name='root', level=DEFAULT_LOG_LEVEL):
-    # type: (unicode) -> logging.Logger
+    # type: (unicode, int) -> logging.Logger
     """
     Initialisation de la session de logging
 
@@ -119,7 +119,7 @@ def log_init(logger_name='root', level=DEFAULT_LOG_LEVEL):
 
 
 def log_exit():
-    # type: (None) -> None
+    # type: () -> None
     """
     Terminaison de la session de logging
 
@@ -131,7 +131,7 @@ def log_exit():
 
 
 def get_fun_ref(fun_name, module_name=__name__):
-    # type: (unicode) -> Any
+    # type: (str, str) -> Any
     """
     Retourne une reference sur la fonction du module courant à partir de son nom
     :param fun_name: nom de la fonction dotn on cherche la référence
@@ -154,7 +154,7 @@ logging_fun = {
 
 
 def log_write(s=u"", level=logging.INFO):
-    # type: (unicode) -> None
+    # type: (unicode, int) -> None
     """
     Ecriture d'une ligne de logging
     ATTENTION: unicode obligatoire en entrée, ne gère pas une str
@@ -176,12 +176,12 @@ def print_proc_rsrc():
         log_write('cpu_times: {}'.format(p.cpu_times()))  # return cached value
         log_write('cpu_percent: {}'.format(p.cpu_percent()))  # return cached value
         log_write('memory_info: ')  # return cached value
-        mem_info_data = map(lambda x: x/1024L, p.memory_info())
-        mem_info_names = ['rss', 'vms', 'num_page_faults', 'peak_wset', 'wset', 'peak_paged_pool', 'paged_pool', 'peak_nonpaged_pool', 'nonpaged_pool', 'pagefile', 'peak_pagefile', 'private']
-        for name, data in itemgetter(0,1,3,4)(zip(mem_info_names, mem_info_data)):
+        mem_info_data = map(lambda x: x / 1024L, p.memory_info())
+        mem_info_names = ['rss', 'vms', 'num_page_faults', 'peak_wset', 'wset', 'peak_paged_pool', 'paged_pool',
+                          'peak_nonpaged_pool', 'nonpaged_pool', 'pagefile', 'peak_pagefile', 'private']
+        for name, data in itemgetter(0, 1, 3, 4)(zip(mem_info_names, mem_info_data)):
             log_write('  {}  : {}'.format(name, data))  # return cached value
 
         # log_write('status: {}'.format(p.status())) # return cached value
         # log_write('create_time: {}'.format(p.create_time()))  # return cached value
         # log_write('memory use: {}'.format(p.memory_info()[3]/1024))
-

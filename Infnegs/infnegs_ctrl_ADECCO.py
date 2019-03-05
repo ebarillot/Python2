@@ -141,7 +141,7 @@ def get_encoding(remets_param, remet_name):
 
 
 def process_data_file(p_path_src, file_name_re, remets_param, remet_name):
-    # type: (unicode, unicode, Dict, unicode, unicode) -> Dict
+    # type: (unicode, unicode, Dict, unicode, unicode) -> OrderedDict
     """
     Analyse d'une liste de fichiers de données pour un remettant donné.
     :param p_path_src: chemin pour trouver les fichiers à traiter
@@ -157,7 +157,7 @@ def process_data_file(p_path_src, file_name_re, remets_param, remet_name):
     """
     encoding_src = get_encoding(remets_param, remet_name)
     file_names = get_files(p_path_src, file_name_re)
-    file_process_result = dict()
+    file_process_result = OrderedDict()
     csv_sep = remets_param[remet_name][KEY_CSV_SEP]
     nb_fields = remets_param[remet_name][KEY_NB_FIELDS]
     # on compile les RE par avance
@@ -166,7 +166,6 @@ def process_data_file(p_path_src, file_name_re, remets_param, remet_name):
         field_re[col_cod] = re.compile(remets_param[remet_name][KEY_COLS][col_cod][KEY_COL_RE])
 
     for file_name in file_names:
-        file_process_result[file_name] = dict()
         file_lines = get_file_lines(os.path.join(p_path_src, file_name), encoding_src)
         # map(lambda x: log_write("{}: {}".format(file_name, x), level=logging.DEBUG), file_lines)
 
@@ -373,7 +372,7 @@ if __name__ == "__main__":
     log_init(level=logging.INFO)
     log_write(">>>>>>>>>>>>>>>>>>>> Controle fichiers ADECCO <<<<<<<<<<<<<<<<<<<<")
     # path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-01"
-    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-11"
+    path_root = br"C:\Users\emmanuel_barillot\Documents\Work\Ellixium_ADECCO\2018-11-b"
     path_src = os.path.join(path_root, 'originaux')
     path_dest = os.path.join(path_root, 'corriges')
     # pattern pour les noms de fichiers à rechercher (syntaxe analogue au ls du shell Unix)

@@ -21,7 +21,6 @@ class Oracle(object):
         # we-re going to use.
         self.cursor = self.db.Cursor()
 
-
     def connect(self, username, password, hostname, port, servicename):
         """ Connect to the database. """
         try:

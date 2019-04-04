@@ -16,7 +16,7 @@ sc = SparkContext(conf=conf)
 
 sqlContext = SQLContext(sc)
 
-sqlContext.read.format(b"org.apache.spark.sql.cassandra").options(table=b"simple", keyspace=b"ks_lab").load().show()
+sqlContext.read.format(b"org.apache.spark.sql.cassandra").options(table=b"immat_by_num_plaque_json", keyspace=b"ks_lab1_datalake").load().show()
 
 # df = sqlContext.read('com.databricks.spark.csv').options(header='true', inferschema='true').load('cars.csv')
 # df.select('year', 'model').write.format('com.databricks.spark.csv').save('newcars.csv')

@@ -44,13 +44,49 @@ end pkg_funaff_chiffrescles ;
 show error
 
 
+
 create or replace package body pkg_funaff_chiffrescles is
+
+type t_chiffrescles is record (
+  CA            varchar2(20),  -- chiffre d'affaire
+  resnet        varchar2(20),  -- resultat net
+  caExport      varchar2(20),  -- CA Export
+  resExploit    varchar2(20),  -- Resutat d'exploitation
+  rcai          varchar2(20),  -- RCAI
+  fonds         varchar2(20),  -- Fonds propres
+  caf           varchar2(20),  -- CAF
+  endette       varchar2(20),  -- Endettement
+  effectif      varchar2(20),  -- Effectif
+  monAchats     varchar2(20),  -- Montant des achats
+  dureeCli      varchar2(20),  -- Durée clients
+  dureeFou      varchar2(20),  -- Durée fournisseurs
+  fondsDedies   varchar2(20)  -- Fonds dédiés
+);
+type t_tab_chiffrescles is table of t_chiffrescles;
+
+
+procedure ouput_chiffrescles(v_chiffrescles t_chiffrescles) is
+begin
+  dbms_output.put_line('chiffre d''affaire      '||   v_chiffrescles.CA            );
+  dbms_output.put_line('resultat net            '||   v_chiffrescles.resnet        );
+  dbms_output.put_line('CA Export               '||   v_chiffrescles.caExport      );
+  dbms_output.put_line('Resutat d''exploitation '||   v_chiffrescles.resExploit    );
+  dbms_output.put_line('RCAI                    '||   v_chiffrescles.rcai          );
+  dbms_output.put_line('Fonds propres           '||   v_chiffrescles.fonds         );
+  dbms_output.put_line('CAF                     '||   v_chiffrescles.caf           );
+  dbms_output.put_line('Endettement             '||   v_chiffrescles.endette       );
+  dbms_output.put_line('Effectif                '||   v_chiffrescles.effectif      );
+  dbms_output.put_line('Montant des achats      '||   v_chiffrescles.monAchats     );
+  dbms_output.put_line('Durée clients           '||   v_chiffrescles.dureeCli      );
+  dbms_output.put_line('Durée fournisseurs      '||   v_chiffrescles.dureeFou      );
+  dbms_output.put_line('Fonds dédiés            '||   v_chiffrescles.fondsDedies   );
+end;
+
 
 function recuperelibelle (  pFAM in varchar2,
                             pLAN in varchar2,
                             pCOD in varchar2)
-return varchar2
-is
+return varchar2 is
     pLIB varchar2(2000) := null;
 begin
     /*
@@ -73,26 +109,191 @@ exception
 end recuperelibelle;
 
 
+function open_curs_SC(pbilseq number)
+    return sys_refcursor
+is
+    curs_SC sys_refcursor;
+begin
+    open curs_SC for 'SELECT
+        /* 01 caffbil       */      gm.SIG24
+        /* 02 resnetbil     */    , gm.SIG6
+        /* 03 caExportbil   */    , gm.SIG38
+        /* 04 resExploitbil */    , gm.SIG4
+        /* 05 rcaibil       */    , gm.SIG5
+        /* 06 fondsbil      */    , nvl(sp.SCDL,0)+nvl(sp.SCDO,0)
+        /* 07 cafbil        */    , ra.R11
+        /* 08 endettebil    */    , nvl(sp.scds,0)+nvl(sp.scdt,0)+nvl(sp.scdu,0)+nvl(sp.scdv,0)+nvl(sa.scys,0)
+        /* 09 effectifbil   */    , sa.scyp
+        /* 10 monAchatsbil  */    , nvl(cr.scfs,0)+nvl(cr.scfu,0)+nvl(cr.scfw,0)
+        /* 11 dureeClibil   */    , ra.R28
+        /* 12 dureeFoubil   */    , ra.R29
+        /* 13 fondsDedies   */    , null
+         FROM gmsig gm, bilsc_cr cr, ratios ra, BILSC_PASSIF sp, BILSC_AFF sa
+        WHERE gm.bilseq = :pbilseq
+          AND gm.bilseq = cr.bilseq
+          AND gm.bilseq = ra.bilseq
+          AND gm.bilseq = sa.bilseq
+          AND gm.bilseq = sp.bilseq'
+          using pbilseq;
+    return curs_SC;
+end;
+
+
+function open_curs_SC_EVAL(pbilseq number)
+    return sys_refcursor
+is
+    curs_SC_EVAL sys_refcursor;
+begin
+    open curs_SC_EVAL for select
+        /* 01 caff       */      case when an.adc_deval12_val = 'EVAL' then an.adc_deval12 else null end
+        /* 02 resnet     */    , gm.SIG6
+        /* 03 caExport   */    , null
+        /* 04 resExploit */    , case when an.adc_deval6_val = 'EVAL' then an.adc_deval6 else null end
+        /* 05 rcai       */    , case when an.adc_deval4_val = 'EVAL' then an.adc_deval4 else null end
+        /* 06 fonds      */    , nvl(pas.SCDL,0)+nvl(pas.SCDO,0)
+        /* 07 caf        */    , case when an.adc_deval11_val = 'EVAL' and an.adc_deval12_val = 'EVAL' and an.adc_deval12 > 0 then round(100*an.adc_deval11/an.adc_deval12,2) else null end
+        /* 08 endette    */    , nvl(pas.scds,0)+nvl(pas.scdt,0)+nvl(pas.scdu,0)+nvl(pas.scdv,0)+nvl(aff.scys,0)
+        /* 09 effectif   */    , aff.scyp
+        /* 10 monAchats  */    , null
+        /* 11 dureeCli   */    , case when an.adc_deval12_val != 'EVAL' or an.adc_deval12 is null or an.adc_deval12 = 0 then null else (((nvl(act.scbx,0)-nvl(pas.scdw,0))*bil.bilduree*30) / an.adc_deval12) end
+        /* 12 dureeFou   */    , null
+        /* 13 fondsDedies*/    , null
+             from bileprod.bilan bil, bileprod.anadec an, bileprod.gmsig gm, bileprod.BILSC_ACTIF act, bileprod.BILSC_PASSIF pas, bileprod.BILSC_AFF aff
+            where bil.bilseq = pbilseq
+              and bil.bilseq = act.bilseq
+              and bil.bilseq = pas.bilseq
+              and bil.bilseq = aff.bilseq
+              and bil.bilseq = an.adc_bilseq (+)
+              and bil.bilseq = gm.bilseq;
+    return curs_SC_EVAL;
+end;
+
+
+function open_curs_SS(pbilseq number)
+    return sys_refcursor
+is
+    curs_SS sys_refcursor;
+begin
+    open curs_SS for select
+        /* 01 caffbil       */      gm.SIG24
+        /* 02 resnetbil     */    , gm.SIG6
+        /* 03 caExportbil   */    , gm.SIG38
+        /* 04 resExploitbil */    , gm.SIG4
+        /* 05 rcaibil       */    , gm.SIG5
+        /* 06 fondsbil      */    , ss.SS142
+        /* 07 cafbil        */    , null
+        /* 08 endettebil    */    , ss.ss156
+        /* 09 effectifbil   */    , cr.ss376
+        /* 10 monAchatsbil  */    , nvl(cr.ss234,0)+nvl(cr.ss238,0)+nvl(cr.ss242,0)
+        /* 11 dureeClibil   */    , ra.R28
+        /* 12 dureeFoubil   */    , ra.R29
+        /* 13 fondsDedies   */    , null
+             from gmsig gm, bilss_cr cr, ratios ra, bilss ss
+            where gm.bilseq = pbilseq
+              and gm.bilseq = cr.bilseq
+              and gm.bilseq = ra.bilseq
+              and gm.bilseq = ss.bilseq;
+    return curs_SS;
+end;
+
+
+function open_curs_SS_EVAL(pbilseq number)
+    return sys_refcursor
+is
+    curs_SS_EVAL sys_refcursor;
+begin
+    open curs_SS_EVAL for select
+        /* 01 caff       */      case when an.adc_deval12_val = 'EVAL' then an.adc_deval12 else null end
+        /* 02 resnet     */    , gm.SIG6
+        /* 03 caExport   */    , null
+        /* 04 resExploit */    , case when an.adc_deval6_val = 'EVAL' then an.adc_deval6 else null end
+        /* 05 rcai       */    , case when an.adc_deval4_val = 'EVAL' then an.adc_deval4 else null end
+        /* 06 fonds      */    , ss.SS142
+        /* 07 caf        */    , case when an.adc_deval11_val = 'EVAL' and an.adc_deval12_val = 'EVAL' and an.adc_deval12 > 0 then round(100*an.adc_deval11/an.adc_deval12,2) else null end
+        /* 08 endette    */    , ss.ss156
+        /* 09 effectif   */    , cr.ss376
+        /* 10 monAchats  */    , null
+        /* 11 dureeCli   */    , case when an.adc_deval12_val != 'EVAL' or an.adc_deval12 is null or an.adc_deval12 = 0 then null else ((nvl(ss.ss068,0)-nvl(ss.ss164,0)*bil.bilduree*30) / an.adc_deval12) end
+        /* 12 dureeFou   */    , null
+        /* 13 fondsDedies*/    , null
+             from bilan bil, anadec an, gmsig gm, BILSS ss, bilss_cr cr
+            where bil.bilseq = pbilseq
+              and bil.bilseq = ss.bilseq
+              and bil.bilseq = cr.bilseq
+              and bil.bilseq = an.adc_bilseq (+)
+              and bil.bilseq = gm.bilseq;
+    return curs_SS_EVAL;
+end;
+
+
+function get_cursor_bilan(
+    bilseq      number,
+    typbilcod   varchar2,
+    oribilcod   varchar2,
+    crconf      varchar2
+)
+return sys_refcursor
+is
+    curs_bilan sys_refcursor;
+begin
+    if typbilcod = 'SC' then
+        if crconf = 'OUI' and oribilcod not in ('EC','RC') then
+            curs_bilan := open_curs_SC_EVAL(bilseq);
+        else
+            curs_bilan := open_curs_SC(bilseq);
+        end if;
+    elsif typbilcod = 'SS' then
+        if crconf = 'OUI' and oribilcod not in ('EC','RC') then
+            curs_bilan := open_curs_SS_EVAL(bilseq);
+        else
+            curs_bilan := open_curs_SS(bilseq);
+        end if;
+    end if;
+    --    curs_bilan := open_curs_SC(bilseq);
+    return curs_bilan;
+
+end get_cursor_bilan;
+
+
+function fetch_bilan (
+    p_refcur    in out SYS_REFCURSOR
+)
+return t_chiffrescles
+is
+    v_chiffrescles  t_chiffrescles;
+begin
+    fetch p_refcur into v_chiffrescles;
+    return v_chiffrescles;
+end;
+
+
+procedure close_refcur (
+    p_refcur    in out SYS_REFCURSOR
+)
+is
+begin
+    close p_refcur;
+end;
+
 
 /************************************************************************************/
-
 function fun_aff_3bilseqCC (
-    pMESSAGE    out varchar2,
-    pENTNUMTYP  in number default 0,
-    pENTNUM     in varchar2,
-    pFORDATES   in varchar2 default 'YYYYMMDD',
-    pNBRLIGOUT  out number,
-    pTAB        out TableauChaine,
-    pLANCOD     in varchar2 default 'FR',
-    pDEVISEIN   in varchar2 default '300',
-    pUNITEIN    in varchar2 default '0',
-    pLIBELLE    in varchar2 default 'O',
-    pTYPEXECOD  in varchar2 default 'SOC',
-    pNBRANNEE   in number   default -1,
-    pACCES_CONF in varchar2 default 'N',
-    pACCES_EVAL in varchar2 default 'N',
-    pCLIPRE     in varchar2,
-    pCLIREF     in varchar2)
+    pMESSAGE    out     varchar2,
+    pENTNUMTYP  in      number default 0,
+    pENTNUM     in      varchar2,
+    pFORDATES   in      varchar2 default 'YYYYMMDD',
+    pNBRLIGOUT  out     number,
+    pTAB        out     TableauChaine,
+    pLANCOD     in      varchar2 default 'FR',
+    pDEVISEIN   in      varchar2 default '300',
+    pUNITEIN    in      varchar2 default '0',
+    pLIBELLE    in      varchar2 default 'O',
+    pTYPEXECOD  in      varchar2 default 'SOC',
+    pNBRANNEE   in      number   default -1,
+    pACCES_CONF in      varchar2 default 'N',
+    pACCES_EVAL in      varchar2 default 'N',
+    pCLIPRE     in      varchar2,
+    pCLIREF     in      varchar2)
 return number
 is
 /*
@@ -213,7 +414,6 @@ is
 
 
 */
-
     i                               binary_integer  := 1;
     ret                             number(10);
     compteur                        number(2)       := 0;
@@ -275,7 +475,6 @@ is
     VcclendettementEUR              number(15)      := null;
     VcclcafEUR                      number(23,2)    := null;
     VcclmontantachatsEUR            number(15)      := null;
-
 
 
     CAexportretourne                number(15)      := null;
@@ -355,7 +554,6 @@ is
     VAvDernierlibType               varchar2(500)   := null;
 
 
-
     AnteCA                          number(15)      := null;
     AnteRes                         number(15)      := null;
     VAntecclcaexport                number(15)      := null;
@@ -392,9 +590,11 @@ is
     type type_curs is ref cursor;
     c_chiffrescles type_curs;
 
-    vNBBILOUT_BILSEQ    NUMBER;
-    vNBRLIGOUT_BILSEQ   NUMBER;
+    vNBBILOUT_BILSEQ    number;
+    vNBRLIGOUT_BILSEQ   number;
     vTAB_BILSEQ         pkg_funaff_bilan2.TableauCHAINE;
+
+    v_chiffrescles                  t_tab_chiffrescles;
 
 begin
 
@@ -421,22 +621,32 @@ begin
         vMESSAGE    varchar2(500);
     begin
         -- on va d'abord chercher les bons bilseq
+        /*
+        **  Tableau retourné :
+        **      BILSEQ
+        **      DATE DE CLOTURE
+        **      Duree
+        **      Type de bilan
+        **      Origine du bilan		-- utilise pour trt des CCL (action E.Barillot)
+        **      Sous-Origine du bilan	-- utilise pour trt des CCL (action E.Barillot)
+        **      CRCONF					-- utilise pour trt des CCL (action E.Barillot)
+        */
         ret := pkg_funaff_bilan2.fun_aff_listebilan (
             pMESSAGE          => pMESSAGE,
             pENTNUMTYP        => pENTNUMTYP,
             pENTNUM           => pENTNUM,
             pCLIPRE           => pCLIPRE,
             pCLIREF           => pCLIREF,
---            pREDACTCOD        => '',
---            pSERVICECOD       => '',
+            pREDACTCOD        => '',
+            pSERVICECOD       => '',
             pTYPBILCOD        => 'SCSS',
-            pORIBILCOD        => 'CORCECCSBLIN',   -- TODO à vérifier
+            pORIBILCOD        => 'COECRCCSBLIN',
             pETACOD           => '10',
             pVALCOD           => '89',
             pNBRANNEE         => pNBRANNEE,
             pLISTEANNEEBILAN  => '0',
             pTROU             => 'O',
-            pNBRBILAN         => 1,   -- TODO à vérifier
+            pNBRBILAN         => 3,   -- TODO à vérifier
             pNBBILOUT         => vNBBILOUT_BILSEQ,
             pNBRLIGOUT        => vNBRLIGOUT_BILSEQ,
             pTAB              => vTAB_BILSEQ,
@@ -452,53 +662,61 @@ begin
     end;
     dbms_output.put_line('ret: '||ret);
     dbms_output.put_line('pMESSAGE: '||pMESSAGE);
+    dbms_output.put_line('vNBBILOUT_BILSEQ: '||vNBBILOUT_BILSEQ);
+    dbms_output.put_line('vNBRLIGOUT_BILSEQ: '||vNBRLIGOUT_BILSEQ);
+    dbms_output.put_line('Liste bilans:');
+    for i in 0..2 loop
+        dbms_output.put_line('Bilan i: ' ||(i+1));
+        declare
+            j binary_integer := i*7;
+        begin
+            j := j+1; dbms_output.put_line('  BILSEQ               ['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  DATE DE CLOTURE      ['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  Duree                ['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  Type de bilan        ['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  Origine du bilan     ['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  Sous-Origine du bilan['||j||']: '||vTAB_BILSEQ(j));
+            j := j+1; dbms_output.put_line('  CRCONF               ['||j||']: '||vTAB_BILSEQ(j));
+        exception
+            when others then
+                dbms_output.put_line(sqlerrm(sqlcode));
+                raise;
+        end;
+        --dbms_output.put_line('vTAB_BILSEQ('||i||'): '||vTAB_BILSEQ(i));
+    end loop;
     dbms_output.put_line('-- apres pkg_funaff_bilan2.fun_aff_listebilan');
 
-/*
-    -- définition du curseur sur les CCL
-    if lower(pACCES_CONF)='o' then
-        open c_chiffrescles for
-            select cclca,              to_char(ccldateexercice,pFORDATES),cclrn,                ccldureeexercice,
-                   decode(ccldevisecod,'-1','0',null,'0',ccldevisecod),   nvl(cclexpunm,0),     ccldateexepre,    cclcaexport,
-                   cclresultatexploit, cclrcai,                           cclfondspropres,      cclendettement,
-                   cclcaf,       cclmontantachats,   ccldureeclients,     ccldureefournisseurs, ccleffectif,      ccltypmoncod, cclsup, cclcrconf,decode(cclcatramoncod,'-1',null,'RIEN',null,cclcatramoncod)
-            from   chiffrescles
-            where  cclentnumtyp_pk = pENTNUMTYP
-            and    cclentnum_pk    = pENTNUM
-            and    (ccltypmoncod = 'BILAN' or ccltypmoncod = 'COMM')
-            and    pTYPEXECOD like '%'||ccltypexecod||'%'
-            and    ((CCLSUP is null and (CCLCRCONF ='NON' or CCLCRCONF is null)) or (cclsup='MACRON') )
-            order  by ccldateexercice desc;
-    else
-        if lower(pACCES_EVAL)='o' then
-            open c_chiffrescles for
-                select cclca,              to_char(ccldateexercice,pFORDATES),cclrn,                ccldureeexercice,
-                   decode(ccldevisecod,'-1','0',null,'0',ccldevisecod),   nvl(cclexpunm,0),     ccldateexepre,    cclcaexport,
-                   cclresultatexploit, cclrcai,                           cclfondspropres,      cclendettement,
-                   cclcaf,       cclmontantachats,   ccldureeclients,     ccldureefournisseurs, ccleffectif,      ccltypmoncod, cclsup, cclcrconf,decode(cclcatramoncod,'-1',null,'RIEN',null,cclcatramoncod)
-                from   chiffrescles
-                where  cclentnumtyp_pk = pENTNUMTYP
-                and    cclentnum_pk    = pENTNUM
-                and    (ccltypmoncod = 'BILAN' or ccltypmoncod = 'COMM')
-                and    pTYPEXECOD like '%'||ccltypexecod||'%'
-                and    ((CCLSUP is null and (CCLCRCONF ='NON' or CCLCRCONF is null)) or (cclsup='EVAL') )
-                order  by ccldateexercice desc;
-        else
-            open  c_chiffrescles for
-                select cclca,              to_char(ccldateexercice,pFORDATES),cclrn,                ccldureeexercice,
-                   decode(ccldevisecod,'-1','0',null,'0',ccldevisecod),   nvl(cclexpunm,0),     ccldateexepre,    cclcaexport,
-                   cclresultatexploit, cclrcai,                           cclfondspropres,      cclendettement,
-                   cclcaf,       cclmontantachats,   ccldureeclients,     ccldureefournisseurs, ccleffectif,      ccltypmoncod, cclsup, cclcrconf,decode(cclcatramoncod,'-1',null,'RIEN',null,cclcatramoncod)
-                from   chiffrescles
-                where  cclentnumtyp_pk = pENTNUMTYP
-                and    cclentnum_pk    = pENTNUM
-                and    (ccltypmoncod = 'BILAN' or ccltypmoncod = 'COMM')
-                and    pTYPEXECOD like '%'||ccltypexecod||'%'
-                and    cclsup is null
-                order  by ccldateexercice desc;
-        end if;
-    end if;
-*/
+    -- initialisation en dehors de la boucle; indispensable
+    v_chiffrescles := t_tab_chiffrescles();
+    for ibil in 1..3 loop
+        dbms_output.put_line('Bilan i: ' ||ibil);
+        declare
+            j               binary_integer := (ibil-1)*7;
+            curs_bilan      sys_refcursor;
+            v_bilseq        varchar2(20) := vTAB_BILSEQ(j+1);
+            v_typbilcod     varchar2(20) := vTAB_BILSEQ(j+4);
+            v_oribilcod     varchar2(20) := vTAB_BILSEQ(j+5);
+            v_crconf        varchar2(20) := vTAB_BILSEQ(j+7);
+            vv_chiffrescles  t_chiffrescles;
+        begin
+            dbms_output.put_line('j: ' ||j);
+            curs_bilan := get_cursor_bilan(v_bilseq, v_typbilcod, v_oribilcod, v_crconf);
+            dbms_output.put_line('ibil: ' ||ibil);
+            vv_chiffrescles := fetch_bilan(curs_bilan);
+            dbms_output.put_line('ibil: ' ||ibil);
+            ouput_chiffrescles(vv_chiffrescles);
+            close_refcur(curs_bilan);
+            v_chiffrescles.extend();
+            v_chiffrescles(ibil) := vv_chiffrescles;
+        exception
+            when others then
+                pMESSAGE := sqlerrm(sqlcode);
+                ret := sqlcode;
+                dbms_output.put_line(pMESSAGE);
+                raise;
+        end;
+    end loop;
+
 
     -- boucle sur le curseur qui parcourt la table des CCL
 /*
@@ -927,6 +1145,10 @@ begin
     --        CAF2retourne:= round(CAF2retourne/(10**vUNITEIN)); -- J. BEDU - 12/03/13 - CAF en jours dans la BDD
             MONTANTachatsretourne:= round(MONTANTachatsretourne/power(10,vUNITEIN));
         end if;
+
+
+
+
         pTAB(i):=CAretourne;  */
 /*i=1,6,11*//*
     i:=i+1;

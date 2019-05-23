@@ -42,6 +42,7 @@ class LocalError(Exception):
     def __str__(self):
         return "keyerr: " + str(self.keyerr) + ":" + str(self.exception)
 
+
 def call_stack():
     """
     Produit un résumé de la "stack call"
@@ -154,7 +155,7 @@ def getRows(curs, schema, tabname, cols, keycols, keyvals):
         raise (le)
 
 
-def enrichCSV (entnums, base_from):
+def enrichCSV(entnums, base_from):
     """
     Fonction qui va chercher les données en base, siren par siren
 
@@ -209,7 +210,9 @@ def enrichCSV (entnums, base_from):
                     ,   keyvals =   tabkeysvals[tabname_1]
                 )
                 # logging.info(tabname_1+" Extraction : %d rows" % len(rows))
-            # on verifie l'existance d'une valeur : à rendre plus generique et parametrable, utilisation de index sur tabcols, boucle ?
+
+            # on verifie l'existance d'une valeur : à rendre plus generique et parametrable,
+            # utilisation de index sur tabcols, boucle ?
             try:
                 _score = rows['SCORES_RATING'][0][0]
             except:
@@ -232,9 +235,10 @@ def enrichCSV (entnums, base_from):
         try:
             curs_from.close()
         except cx_Oracle.DatabaseError as e:
-            le = LocalError(e,str(entnum))
+            le = LocalError(e, str(entnum))
             mngtError(le)
     return outs
+
 
 #####################
 # programme principal
@@ -256,8 +260,8 @@ if __name__ == "__main__":
 
     # fileNameIn = 'input.csv'
     fileNameIn = '2016-07-04-Ellixium_Unilend_in.txt'
-    fileNameOut = fileNameIn.replace("_in.txt","_out.csv")
-    fieldnames = ['entnum', 'Ellix', 'fj', 'score', 'nom'] # en relation avec tabcols
+    fileNameOut = fileNameIn.replace("_in.txt", "_out.csv")
+    fieldnames = ['entnum', 'Ellix', 'fj', 'score', 'nom']  # en relation avec tabcols
     entnums=[]  # liste de siren en entrée
     outs=[]  # liste de tuples en sortie
     with open(fileNameIn, 'rb') as f:
@@ -266,7 +270,7 @@ if __name__ == "__main__":
             # print row
             entnums.append(row[0])
 
-    outs = enrichCSV (entnums=entnums, base_from=base_from)
+    outs = enrichCSV(entnums=entnums, base_from=base_from)
 
     with open(fileNameOut, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=fieldnames, dialect='csvdefault')

@@ -443,6 +443,7 @@ def deleteBilan (entnum, annee, origine, typbil, base_to):
             le = LocalError(e,entnum+","+annee+","+origine+","+typbil)
             mngtError(le)
 
+
 #####################
 # programme principal
 #####################
@@ -480,11 +481,9 @@ if __name__ == "__main__":
     # deleteBilan (entnum='007280605', annee=None, origine=None, typbil=None, base_to=base_to)
     # copyBilan (entnum='007280605', annee=None, origine=None, typbil=None, base_from=base_from, base_to=base_to)
 
-    deleteBilan (entnum='334300100', annee=None, origine=None, typbil=None, base_to=base_to)
-    copyBilan (entnum='334300100', annee=None, origine=None, typbil=None, base_from=base_from, base_to=base_to)
+    deleteBilan(entnum='334300100', annee=None, origine=None, typbil=None, base_to=base_to)
+    copyBilan(entnum='334300100', annee=None, origine=None, typbil=None, base_from=base_from, base_to=base_to)
 
-
-
-    logging.info ('====================')
-    logging.info ('END: ' + str(datetime.datetime.today()))
-    logging.info ('====================')
+    logging.info('====================')
+    logging.info('END: ' + str(datetime.datetime.today()))
+    logging.info('====================')
